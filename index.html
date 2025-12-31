@@ -1155,7 +1155,7 @@
                             <div class="form-group">
                                 <button id="login-btn" class="btn btn-block">登录后台</button>
                             </div>
-                            <p class="subtitle">初始密码：8888</p>
+                            <!-- 修改：删除了默认密码的文字提示 -->
                         </div>
                     </div>
                 </div>
@@ -1190,7 +1190,7 @@
                     <div id="dimensions" class="tab-content">
                         <div class="card dimension-management">
                             <h3>维度套账管理</h3>
-                            <p style="color: #666; margin-bottom: 15px;">维度套账是一组相关的评估维度。每个题库可以关联一个维度套账，题目选项的维度从套账中选择。</p>
+                            <p style="color: #666; margin-bottom: 15px;">维度套账是一组相关的评估维度。每个题库可以关联一个维度套账，题目选项的维度将从套账中选择。</p>
                             
                             <div class="dimension-set-list" id="dimension-set-list">
                                 <!-- 维度套账列表将动态生成 -->
@@ -3014,7 +3014,7 @@
             });
         }
         
-        // 导出PNG报告
+        // 导出PNG报告 - 修改：进一步缩小雷达图和数值数据
         async function exportPNGReport() {
             const result = testResults.find(r => r.id === viewingResultId);
             if (!result) return;
@@ -3032,34 +3032,34 @@
                     position: fixed;
                     top: -9999px;
                     left: -9999px;
-                    width: 800px; /* 减小宽度 */
+                    width: 700px; /* 进一步减小宽度 */
                     background: white;
-                    padding: 30px;
+                    padding: 25px; /* 减小内边距 */
                     z-index: 9999;
                     font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
-                    box-shadow: 0 0 20px rgba(0,0,0,0.1);
-                    box-sizing: box;
+                    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+                    box-sizing: border-box;
                 `;
                 
                 // 添加测试者信息和测试时间
                 exportContainer.innerHTML = `
-                    <div style="text-align: center; margin-bottom: 20px;">
-                        <h1 style="color: #2c3e50; font-size: 24px; margin-bottom: 10px;">人才评测报告</h1>
-                        <div style="border-bottom: 2px solid #f0f0f0; margin-bottom: 15px;"></div>
-                        <p style="font-size: 16px; color: #333; margin-bottom: 5px;">测试者: ${result.userName || "匿名用户"}</p>
-                        <p style="font-size: 14px; color: #666; margin-bottom: 5px;">测试题库: ${result.bankName || "未知题库"}</p>
-                        <p style="font-size: 14px; color: #666;">测试时间: ${result.timestamp}</p>
+                    <div style="text-align: center; margin-bottom: 15px;"> <!-- 减小下边距 -->
+                        <h1 style="color: #2c3e50; font-size: 22px; margin-bottom: 8px;">人才评测报告</h1> <!-- 减小字体和边距 -->
+                        <div style="border-bottom: 1px solid #f0f0f0; margin-bottom: 10px;"></div> <!-- 减小边框和下边距 -->
+                        <p style="font-size: 15px; color: #333; margin-bottom: 4px;">测试者: ${result.userName || "匿名用户"}</p> <!-- 减小字体和边距 -->
+                        <p style="font-size: 13px; color: #666; margin-bottom: 4px;">测试题库: ${result.bankName || "未知题库"}</p> <!-- 减小字体和边距 -->
+                        <p style="font-size: 13px; color: #666;">测试时间: ${result.timestamp}</p> <!-- 减小字体 -->
                     </div>
-                    <div style="height: 15px;"></div>
+                    <div style="height: 10px;"></div> <!-- 减小空行高度 -->
                 `;
                 
                 // 获取雷达图canvas
                 const chartCanvas = document.getElementById('radarChart');
                 if (chartCanvas) {
-                    // 创建一个新的canvas用于导出，缩小尺寸
+                    // 创建一个新的canvas用于导出，进一步缩小尺寸
                     const tempCanvas = document.createElement('canvas');
-                    tempCanvas.width = 600; // 减小宽度
-                    tempCanvas.height = 400; // 减小高度
+                    tempCanvas.width = 500; // 进一步减小宽度
+                    tempCanvas.height = 350; // 进一步减小高度
                     const tempCtx = tempCanvas.getContext('2d');
                     
                     // 设置背景色
@@ -3072,12 +3072,12 @@
                     
                     await new Promise((resolve, reject) => {
                         img.onload = function() {
-                            // 使用较小的缩放比例，确保雷达图完全显示
-                            const scale = 0.8; // 减小缩放比例
+                            // 使用更小的缩放比例，确保雷达图完全显示
+                            const scale = 0.6; // 进一步减小缩放比例
                             const scaledWidth = chartCanvas.width * scale;
                             const scaledHeight = chartCanvas.height * scale;
                             const x = (tempCanvas.width - scaledWidth) / 2;
-                            const y = 10; // 减小上边距
+                            const y = 5; // 进一步减小上边距
                             
                             // 保存上下文状态
                             tempCtx.save();
@@ -3092,7 +3092,7 @@
                             // 将临时canvas添加到导出容器
                             const imgElement = document.createElement('img');
                             imgElement.src = tempCanvas.toDataURL('image/png');
-                            imgElement.style.cssText = 'width: 100%; height: auto; max-width: 600px; margin: 0 auto; display: block;';
+                            imgElement.style.cssText = 'width: 100%; height: auto; max-width: 500px; margin: 0 auto; display: block;';
                             exportContainer.appendChild(imgElement);
                             resolve();
                         };
@@ -3101,15 +3101,60 @@
                     });
                 }
                 
-                // 添加维度排名到导出容器
+                // 添加维度排名到导出容器，缩小整体尺寸
                 const rankingContainer = document.getElementById("dimension-ranking");
                 if (rankingContainer) {
                     const rankingClone = rankingContainer.cloneNode(true);
-                    rankingClone.style.marginTop = "20px";
-                    rankingClone.style.padding = "15px";
+                    
+                    // 缩小整个维度排名容器的样式
+                    rankingClone.style.marginTop = "15px"; // 减小上边距
+                    rankingClone.style.padding = "12px"; // 减小内边距
                     rankingClone.style.background = "#f8f9fa";
-                    rankingClone.style.borderRadius = "8px";
-                    rankingClone.style.fontSize = "14px";
+                    rankingClone.style.borderRadius = "6px"; // 减小圆角
+                    rankingClone.style.fontSize = "12px"; // 减小字体大小
+                    
+                    // 缩小排名项
+                    const rankingItems = rankingClone.querySelectorAll('.ranking-item');
+                    rankingItems.forEach(item => {
+                        item.style.padding = "8px 10px"; // 减小内边距
+                        item.style.marginBottom = "5px"; // 减小下边距
+                        
+                        // 缩小排名数字圈
+                        const rankCircle = item.querySelector('.ranking-rank');
+                        if (rankCircle) {
+                            rankCircle.style.width = "24px"; // 减小宽度
+                            rankCircle.style.height = "24px"; // 减小高度
+                            rankCircle.style.fontSize = "12px"; // 减小字体
+                        }
+                        
+                        // 缩小颜色点
+                        const colorDot = item.querySelector('.ranking-color');
+                        if (colorDot) {
+                            colorDot.style.width = "16px"; // 减小宽度
+                            colorDot.style.height = "16px"; // 减小高度
+                        }
+                        
+                        // 缩小维度名称
+                        const nameSpan = item.querySelector('.ranking-name');
+                        if (nameSpan) {
+                            nameSpan.style.fontSize = "13px"; // 减小字体
+                        }
+                        
+                        // 缩小得分
+                        const scoreSpan = item.querySelector('.ranking-score');
+                        if (scoreSpan) {
+                            scoreSpan.style.fontSize = "13px"; // 减小字体
+                        }
+                    });
+                    
+                    // 缩小标题
+                    const title = rankingClone.querySelector('.ranking-title');
+                    if (title) {
+                        title.style.fontSize = "14px"; // 减小字体
+                        title.style.paddingBottom = "8px"; // 减小下边距
+                        title.style.marginBottom = "10px"; // 减小下边距
+                    }
+                    
                     exportContainer.appendChild(rankingClone);
                 }
                 
@@ -3719,7 +3764,7 @@
             alert("题库创建成功！");
         }
         
-        // 管理员登录
+        // 管理员登录 - 修改：移除默认密码提示
         function adminLogin() {
             const password = document.getElementById("admin-password").value;
             
@@ -3740,7 +3785,7 @@
                 // 设置密码框为空
                 document.getElementById("admin-password").value = "";
             } else {
-                alert("密码错误！初始密码为8888");
+                alert("密码错误！"); // 修改：移除默认密码提示
             }
         }
         
