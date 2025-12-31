@@ -1,0 +1,4294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人才评测工具</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        /* 头部样式 */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #eaeaea;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            border-radius: 8px;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .admin-login-btn, .back-home-btn {
+            padding: 10px 20px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: background 0.3s ease;
+        }
+        
+        .admin-login-btn:hover, .back-home-btn:hover {
+            background: #5a6268;
+        }
+        
+        /* 首页样式 */
+        .home-page {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 70vh;
+            text-align: center;
+        }
+        
+        .welcome-section {
+            max-width: 800px;
+            margin-bottom: 50px;
+        }
+        
+        .welcome-title {
+            font-size: 2.8rem;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+        
+        .welcome-subtitle {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .start-btn {
+            padding: 18px 50px;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1.3rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(37, 117, 252, 0.3);
+            margin-top: 20px;
+        }
+        
+        .start-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(37, 117, 252, 0.4);
+        }
+        
+        .features {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 60px;
+            flex-wrap: wrap;
+        }
+        
+        .feature-item {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            width: 250px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+        
+        .feature-item:hover {
+            transform: translateY(-10px);
+        }
+        
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            margin: 0 auto 20px;
+        }
+        
+        .feature-title {
+            font-size: 1.2rem;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .feature-desc {
+            color: #666;
+            font-size: 0.95rem;
+        }
+        
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            animation: modalFadeIn 0.3s ease;
+        }
+        
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        /* 测试页面样式 */
+        .test-page {
+            display: none;
+        }
+        
+        .test-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .test-title {
+            font-size: 1.8rem;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .test-progress {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .progress-bar {
+            flex-grow: 1;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 0 15px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        /* 通用卡片样式 */
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+            margin-bottom: 20px;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        /* 题库选择页面 */
+        .bank-selection-page {
+            display: none;
+        }
+        
+        .bank-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .bank-card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        
+        .bank-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-color: #2575fc;
+        }
+        
+        .bank-card.selected {
+            border-color: #2575fc;
+            background-color: #f0f7ff;
+        }
+        
+        .bank-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+        
+        .bank-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .bank-desc {
+            color: #666;
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+        }
+        
+        .bank-info {
+            display: flex;
+            justify-content: space-between;
+            color: #888;
+            font-size: 0.85rem;
+        }
+        
+        /* 题目样式 */
+        .question-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-left: 4px solid #6a11cb;
+        }
+        
+        .question-text {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .option {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 15px;
+            border-radius: 8px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            transition: all 0.2s ease;
+            /* 修改：文字在框内居中左对齐 */
+            justify-content: flex-start;
+            text-align: left;
+        }
+        
+        .option:hover {
+            background: #f0f7ff;
+            border-color: #a0c8ff;
+        }
+        
+        .option.selected {
+            background: #e8f4ff;
+            border-color: #2575fc;
+        }
+        
+        /* 修改：移除圆圈符号，只保留文字 */
+        .option input {
+            display: none; /* 隐藏圆圈符号 */
+        }
+        
+        /* 修改：选项文字样式，取消A和B前缀 */
+        .option-label {
+            flex: 1;
+            cursor: pointer;
+            font-size: 1rem;
+            line-height: 1.5;
+            /* 文字左对齐，但在选项框内垂直居中 */
+            display: flex;
+            align-items: center;
+        }
+        
+        /* 修改：选项字母样式（A/B） */
+        .option-letter {
+            font-weight: bold;
+            margin-right: 10px;
+            color: #2c3e50;
+            min-width: 24px;
+            text-align: center;
+        }
+        
+        /* 按钮样式 */
+        .btn {
+            padding: 12px 25px;
+            background: #2575fc;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: background 0.3s ease;
+        }
+        
+        .btn:hover {
+            background: #1c65e0;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn-success {
+            background: #28a745;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+        
+        .btn-block {
+            width: 100%;
+            display: block;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #444;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 14px 18px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border 0.3s ease;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            border-color: #2575fc;
+            outline: none;
+        }
+        
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        /* 后台管理样式 */
+        .admin-page {
+            display: none;
+        }
+        
+        .tab-container {
+            margin-bottom: 20px;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #e0e0e0;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .tab {
+            padding: 12px 25px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            color: #2575fc;
+            border-bottom-color: #2575fc;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .password-form {
+            max-width: 400px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        /* 结果列表页面 */
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .results-table th, .results-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .results-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        .results-table tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .user-link {
+            color: #2575fc;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .user-link:hover {
+            text-decoration: underline;
+        }
+        
+        /* 结果详情页面 */
+        .result-detail-page {
+            display: none;
+        }
+        
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eaeaea;
+        }
+        
+        .result-info {
+            flex-grow: 1;
+        }
+        
+        .result-title {
+            font-size: 1.8rem;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .result-subtitle {
+            color: #666;
+            font-size: 1rem;
+        }
+        
+        .chart-container {
+            height: 500px;
+            position: relative;
+            margin-bottom: 30px;
+        }
+        
+        .export-panel {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        
+        .export-title {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        /* 维度排名样式 */
+        .dimension-ranking {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .ranking-title {
+            font-size: 1.2rem;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .ranking-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .ranking-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        
+        .ranking-rank {
+            width: 30px;
+            height: 30px;
+            background: #2575fc;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        
+        .ranking-rank.rank-1 {
+            background: #FFD700;
+        }
+        
+        .ranking-rank.rank-2 {
+            background: #C0C0C0;
+        }
+        
+        .ranking-rank.rank-3 {
+            background: #CD7F32;
+        }
+        
+        .ranking-dimension {
+            flex: 1;
+            display: flex;
+            align-items: center;
+        }
+        
+        .ranking-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .ranking-name {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        
+        .ranking-score {
+            font-weight: 600;
+            color: #2575fc;
+            font-size: 1.1rem;
+        }
+        
+        /* 题库管理页面 */
+        .bank-management-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+        
+        .bank-management-card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+            position: relative;
+        }
+        
+        .bank-management-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .bank-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .question-count-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            background: #e8f4ff;
+            color: #2575fc;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+        }
+        
+        /* 题目编辑页面 */
+        .question-edit-page {
+            display: none;
+        }
+        
+        .question-list {
+            max-height: 500px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        
+        .question-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #6a11cb;
+        }
+        
+        .question-list-text {
+            flex-grow: 1;
+            font-weight: 500;
+        }
+        
+        .question-list-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        /* 维度管理样式 */
+        .dimension-management {
+            margin-bottom: 30px;
+        }
+        
+        .dimension-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .dimension-item {
+            display: flex;
+            align-items: center;
+            background: #f8f9fa;
+            padding: 8px 15px;
+            border-radius: 20px;
+            gap: 10px;
+        }
+        
+        .dimension-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+        
+        .dimension-name-input {
+            flex: 1;
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        
+        .dimension-add-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 15px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .dimension-remove-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        
+        /* 维度标签 */
+        .dimension-tag {
+            display: inline-block;
+            padding: 5px 12px;
+            background: #e8f4ff;
+            color: #2575fc;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+        
+        /* 文件上传样式 */
+        .file-upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+        
+        .file-upload-area:hover {
+            border-color: #2575fc;
+            background-color: #f8f9fa;
+        }
+        
+        .file-upload-icon {
+            font-size: 3rem;
+            color: #2575fc;
+            margin-bottom: 15px;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        /* 隐藏类 */
+        .hidden {
+            display: none;
+        }
+        
+        /* 消息提示 */
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 400px;
+        }
+        
+        /* 页脚 */
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            padding: 25px;
+            color: #666;
+            font-size: 0.9rem;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .bank-grid, .bank-management-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .features {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .feature-item {
+                width: 100%;
+                max-width: 350px;
+            }
+            
+            .welcome-title {
+                font-size: 2.2rem;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .result-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .results-table th, .results-table td {
+                padding: 8px 10px;
+                font-size: 0.9rem;
+            }
+            
+            /* 响应式：选项文字左对齐 */
+            .option {
+                justify-content: flex-start;
+            }
+            
+            .option-label {
+                text-align: left;
+                justify-content: flex-start;
+            }
+            
+            .chart-container {
+                height: 400px;
+            }
+            
+            .ranking-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .ranking-score {
+                align-self: flex-end;
+            }
+        }
+        
+        /* 维度套账管理样式 */
+        .dimension-set-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .dimension-set-item {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            border-left: 4px solid #6a11cb;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .dimension-set-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .dimension-set-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .dimension-set-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .dimension-set-dimensions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .dimension-in-set {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #f0f7ff;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+        }
+        
+        .dimension-in-set-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .add-dimension-set-btn {
+            margin-top: 20px;
+            background: #6a11cb;
+        }
+        
+        .add-dimension-set-btn:hover {
+            background: #5a0db8;
+        }
+        
+        .import-dimension-set-btn {
+            background: #28a745;
+            margin-top: 10px;
+        }
+        
+        .import-dimension-set-btn:hover {
+            background: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">T</div>
+                <span id="logo-text">人才评测工具</span>
+            </div>
+            <button id="header-action-btn" class="admin-login-btn">管理员登录</button>
+        </div>
+        
+        <!-- 首页 -->
+        <div id="home-page" class="home-page">
+            <div class="welcome-section">
+                <h1 class="welcome-title" id="main-title">专业人才能力评估系统</h1>
+                <p class="welcome-subtitle" id="subtitle-text">
+                    通过科学的评估模型，帮助您了解个人在领导力、团队协作、创造力、分析能力和执行力等关键维度的表现，为个人发展和团队建设提供参考。
+                </p>
+                <button id="start-test-btn" class="start-btn">开始测试</button>
+            </div>
+            
+            <div class="features">
+                <div class="feature-item">
+                    <div class="feature-icon">✓</div>
+                    <h3 class="feature-title">多维度评估</h3>
+                    <p class="feature-desc">支持多种题库，涵盖领导力、团队协作、创造力等关键维度</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">⌛</div>
+                    <h3 class="feature-title">快速高效</h3>
+                    <p class="feature-desc">15-20分钟完成测试，即时生成专业评估报告</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🔒</div>
+                    <h3 class="feature-title">数据安全</h3>
+                    <p class="feature-desc">测试结果加密存储，仅管理员可查看统计信息</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 题库选择页面 -->
+        <div id="bank-selection-page" class="bank-selection-page">
+            <div class="test-header">
+                <h1 class="test-title">选择题库</h1>
+                <p id="test-user-info">测试者：<span id="current-user"></span></p>
+            </div>
+            
+            <div class="bank-grid" id="bank-selection-grid">
+                <!-- 题库卡片将动态生成 -->
+            </div>
+            
+            <div class="btn-group">
+                <button id="back-to-home-from-bank" class="btn btn-secondary">返回首页</button>
+                <button id="start-selected-test" class="btn" disabled>开始测试</button>
+            </div>
+        </div>
+        
+        <!-- 测试页面 -->
+        <div id="test-page" class="test-page">
+            <div class="test-header">
+                <h1 class="test-title" id="test-bank-name">人才能力评估测试</h1>
+                <p id="test-user-info">测试者：<span id="test-page-user"></span></p>
+            </div>
+            
+            <div class="test-progress">
+                <span id="current-question">1</span>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <span id="total-questions">0</span>
+            </div>
+            
+            <div id="test-container">
+                <!-- 测试题将动态加载到这里 -->
+            </div>
+            
+            <div class="btn-group">
+                <button id="prev-question" class="btn btn-secondary">上一题</button>
+                <button id="next-question" class="btn">下一题</button>
+                <button id="submit-test" class="btn" style="display: none;">提交测试</button>
+            </div>
+        </div>
+        
+        <!-- 管理员后台 -->
+        <div id="admin-page" class="admin-page">
+            <div class="card">
+                <div id="login-section">
+                    <div class="login-container">
+                        <div class="password-form">
+                            <h2>管理员登录</h2>
+                            <p>请输入密码访问后台管理系统</p>
+                            <div class="form-group">
+                                <input type="password" id="admin-password" placeholder="输入管理员密码">
+                            </div>
+                            <div class="form-group">
+                                <button id="login-btn" class="btn btn-block">登录后台</button>
+                            </div>
+                            <p class="subtitle">初始密码：8888</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="admin-section" class="hidden">
+                    <h2>后台管理系统</h2>
+                    
+                    <div class="tabs" style="margin-bottom: 0;">
+                        <div class="tab active" data-admin-tab="banks">题库管理</div>
+                        <div class="tab" data-admin-tab="dimensions">维度管理</div>
+                        <div class="tab" data-admin-tab="results">测试结果</div>
+                        <div class="tab" data-admin-tab="settings">系统设置</div>
+                    </div>
+                    
+                    <!-- 题库管理 -->
+                    <div id="banks" class="tab-content active">
+                        <div class="card">
+                            <h3>题库列表</h3>
+                            <div class="btn-group">
+                                <button id="add-bank-btn" class="btn btn-success">+ 新增题库</button>
+                                <button id="import-bank-btn" class="btn btn-warning">📁 导入题库</button>
+                                <button id="export-template-btn" class="btn btn-secondary">📋 导入模板</button>
+                            </div>
+                            
+                            <div class="bank-management-grid" id="bank-management-grid">
+                                <!-- 题库管理卡片将动态生成 -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 维度管理 -->
+                    <div id="dimensions" class="tab-content">
+                        <div class="card dimension-management">
+                            <h3>维度套账管理</h3>
+                            <p style="color: #666; margin-bottom: 15px;">维度套账是一组相关的评估维度。每个题库可以关联一个维度套账，题目选项的维度从套账中选择。</p>
+                            
+                            <div class="dimension-set-list" id="dimension-set-list">
+                                <!-- 维度套账列表将动态生成 -->
+                            </div>
+                            
+                            <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
+                                <button id="add-dimension-set-btn" class="btn add-dimension-set-btn">+ 新增维度套账</button>
+                                <button id="import-dimension-set-btn" class="btn import-dimension-set-btn">📁 导入维度套账</button>
+                                <button id="export-dimension-set-template-btn" class="btn btn-secondary">📋 维度套账模板</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 测试结果 -->
+                    <div id="results" class="tab-content">
+                        <div class="card">
+                            <h3>测试结果列表</h3>
+                            <div class="form-group">
+                                <label for="result-filter">筛选测试结果</label>
+                                <select id="result-filter">
+                                    <option value="all">所有结果</option>
+                                    <option value="today">今天</option>
+                                    <option value="week">本周</option>
+                                    <option value="month">本月</option>
+                                </select>
+                            </div>
+                            
+                            <div style="max-height: 500px; overflow-y: auto;">
+                                <table class="results-table">
+                                    <thead>
+                                        <tr>
+                                            <th>测试者</th>
+                                            <th>题库</th>
+                                            <th>提交时间</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="results-list">
+                                        <!-- 测试结果将在这里显示 -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 系统设置 -->
+                    <div id="settings" class="tab-content">
+                        <div class="card">
+                            <h3>首页文字设置</h3>
+                            <div class="form-group">
+                                <label for="home-logo-text">左上角LOGO文字</label>
+                                <input type="text" id="home-logo-text" placeholder="人才评测工具">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="home-main-title">首页主标题</label>
+                                <input type="text" id="home-main-title" placeholder="专业人才能力评估系统">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="home-subtitle">首页副标题</label>
+                                <textarea id="home-subtitle" placeholder="通过科学的评估模型，帮助您了解个人在领导力、团队协作、创造力、分析能力和执行力等关键维度的表现，为个人发展和团队建设提供参考。"></textarea>
+                            </div>
+                            
+                            <button id="save-home-text" class="btn btn-block">保存首页文字设置</button>
+                        </div>
+                        
+                        <div class="card">
+                            <h3>修改管理员密码</h3>
+                            <div class="form-group">
+                                <label for="current-password">当前密码</label>
+                                <input type="password" id="current-password">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="new-password">新密码</label>
+                                <input type="password" id="new-password">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="confirm-password">确认新密码</label>
+                                <input type="password" id="confirm-password">
+                            </div>
+                            
+                            <button id="change-password" class="btn btn-block">修改密码</button>
+                        </div>
+                        
+                        <!-- 新增：数据备份与恢复功能 -->
+                        <div class="card">
+                            <h3>数据备份与恢复</h3>
+                            <div class="alert alert-info">
+                                <p><strong>备份说明：</strong></p>
+                                <p>1. 备份内容包括：题库数据、维度套账、测试结果和首页文字设置</p>
+                                <p>2. 备份文件将保存为JSON格式</p>
+                                <p>3. 恢复数据将覆盖现有数据，请谨慎操作</p>
+                            </div>
+                            
+                            <div class="form-group">
+                                <button id="backup-data-btn" class="btn btn-success">备份数据</button>
+                                <button id="restore-data-btn" class="btn btn-warning">恢复数据</button>
+                            </div>
+                            
+                            <div class="file-upload-area" id="backup-file-upload-area" style="display: none;">
+                                <div class="file-upload-icon">📁</div>
+                                <p style="font-size: 1.1rem; margin-bottom: 10px;">点击或拖拽备份文件到这里</p>
+                                <p style="color: #666; font-size: 0.9rem;">支持.json格式备份文件</p>
+                                <input type="file" id="backup-file" class="file-input" accept=".json">
+                            </div>
+                            
+                            <div id="backup-file-info" style="display: none; margin-bottom: 20px;">
+                                <p>已选择备份文件: <span id="selected-backup-file-name"></span></p>
+                            </div>
+                            
+                            <div class="btn-group" id="backup-buttons" style="display: none;">
+                                <button id="cancel-restore-backup" class="btn btn-secondary">取消</button>
+                                <button id="confirm-restore-backup" class="btn btn-danger">确认恢复数据</button>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <h3>系统信息</h3>
+                            <p>题库数量: <span id="system-bank-count">0</span></p>
+                            <p>测试记录总数: <span id="system-result-count">0</span></p>
+                            <p>最后测试时间: <span id="last-test-time">暂无</span></p>
+                            <button id="export-all-data" class="btn btn-secondary" style="margin-top: 15px;">导出所有数据</button>
+                            <button id="clear-all-data" class="btn btn-danger" style="margin-top: 10px;">清空所有数据</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 题库编辑页面 -->
+        <div id="bank-edit-page" class="admin-page">
+            <div class="card">
+                <div class="result-header">
+                    <div class="result-info">
+                        <h2 class="result-title" id="edit-bank-name">编辑题库</h2>
+                        <p class="result-subtitle" id="edit-bank-desc"></p>
+                    </div>
+                    <button id="back-to-bank-management" class="btn btn-secondary">返回题库管理</button>
+                </div>
+                
+                <div class="card">
+                    <h3>题库基本信息</h3>
+                    <div class="form-group">
+                        <label for="edit-bank-name-input">题库名称</label>
+                        <input type="text" id="edit-bank-name-input" placeholder="请输入题库名称">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-bank-desc-input">题库描述</label>
+                        <textarea id="edit-bank-desc-input" placeholder="请输入题库描述（可选）"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-bank-dimension-set">选择维度套账</label>
+                        <select id="edit-bank-dimension-set">
+                            <!-- 维度套账选项将动态生成 -->
+                        </select>
+                        <p style="color: #666; font-size: 0.9rem; margin-top: 5px;">选择维度套账后，题目选项的维度将从该套账中选择</p>
+                    </div>
+                    
+                    <button id="save-bank-info-btn" class="btn">保存题库信息</button>
+                </div>
+                
+                <div class="card">
+                    <h3>添加新题目</h3>
+                    <div class="form-group">
+                        <label for="question-text">问题内容</label>
+                        <textarea id="question-text" placeholder="请输入评测问题..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="option-a">选项A</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="option-a-text" placeholder="选项A内容" style="flex: 2;">
+                            <select id="option-a-dimension" style="flex: 1;">
+                                <option value="">无维度</option>
+                                <!-- 维度选项将动态生成 -->
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="option-b">选项B</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="option-b-text" placeholder="选项B内容" style="flex: 2;">
+                            <select id="option-b-dimension" style="flex: 1;">
+                                <option value="">无维度</option>
+                                <!-- 维度选项将动态生成 -->
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button id="add-question-btn" class="btn btn-block">添加到题库</button>
+                </div>
+                
+                <div class="card">
+                    <h3>题目列表 (<span id="edit-question-count">0</span> 个问题)</h3>
+                    <div class="question-list" id="edit-question-list">
+                        <!-- 题目列表将在这里显示 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 结果详情页面 -->
+        <div id="result-detail-page" class="admin-page">
+            <div class="card">
+                <div class="result-header">
+                    <div class="result-info">
+                        <h2 class="result-title" id="detail-user-name">测试者姓名</h2>
+                        <p class="result-subtitle">
+                            题库: <span id="detail-bank-name"></span> | 
+                            测试时间: <span id="detail-test-time"></span>
+                        </p>
+                    </div>
+                    <button id="back-to-results" class="btn btn-secondary">返回结果列表</button>
+                </div>
+                
+                <div class="card">
+                    <h3>维度分析雷达图</h3>
+                    <div class="chart-container">
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="dimension-ranking" id="dimension-ranking">
+                    <!-- 维度排名将在这里动态生成 -->
+                </div>
+                
+                <div class="export-panel">
+                    <h3 class="export-title">导出测试报告</h3>
+                    <p style="margin-bottom: 15px;">选择导出格式：</p>
+                    <div class="btn-group">
+                        <button id="export-png-btn" class="btn btn-success">导出PNG报告</button>
+                        <button id="export-xlsx-btn" class="btn btn-warning">导出XLSX报告</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 姓名输入模态框 -->
+        <div id="name-modal" class="modal">
+            <div class="modal-content">
+                <h2 class="modal-title">开始测试</h2>
+                <p style="text-align: center; margin-bottom: 25px;">请输入您的姓名，测试结果将以此名称保存</p>
+                <div class="form-group">
+                    <input type="text" id="user-name" placeholder="请输入您的姓名" autofocus>
+                </div>
+                <div class="btn-group">
+                    <button id="cancel-test" class="btn btn-secondary">取消</button>
+                    <button id="confirm-name" class="btn">下一步</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 新增题库模态框 -->
+        <div id="add-bank-modal" class="modal">
+            <div class="modal-content">
+                <h2 class="modal-title">新增题库</h2>
+                <div class="form-group">
+                    <label for="new-bank-name">题库名称</label>
+                    <input type="text" id="new-bank-name" placeholder="请输入题库名称" autofocus>
+                </div>
+                <div class="form-group">
+                    <label for="new-bank-desc">题库描述</label>
+                    <textarea id="new-bank-desc" placeholder="请输入题库描述（可选）"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="new-bank-dimension-set">选择维度套账</label>
+                    <select id="new-bank-dimension-set">
+                        <!-- 维度套账选项将动态生成 -->
+                    </select>
+                    <p style="color: #666; font-size: 0.9rem; margin-top: 5px;">选择维度套账后，题目选项的维度将从该套账中选择</p>
+                </div>
+                <div class="btn-group">
+                    <button id="cancel-add-bank" class="btn btn-secondary">取消</button>
+                    <button id="confirm-add-bank" class="btn">创建题库</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 导入题库模态框 -->
+        <div id="import-bank-modal" class="modal">
+            <div class="modal-content">
+                <h2 class="modal-title">导入题库</h2>
+                <div class="alert alert-info">
+                    <p><strong>导入说明：</strong></p>
+                    <p>1. 请使用系统导出的模板文件进行编辑</p>
+                    <p>2. 模板中的评估维度下拉框会自动更新为当前系统中的维度</p>
+                    <p>3. 请确保Excel文件格式正确，不要修改表头</p>
+                </div>
+                
+                <div class="file-upload-area" id="file-upload-area">
+                    <div class="file-upload-icon">📁</div>
+                    <p style="font-size: 1.1rem; margin-bottom: 10px;">点击或拖拽Excel文件到这里</p>
+                    <p style="color: #666; font-size: 0.9rem;">支持.xlsx和.xls格式</p>
+                    <input type="file" id="excel-file" class="file-input" accept=".xlsx,.xls">
+                </div>
+                
+                <div id="file-info" style="display: none; margin-bottom: 20px;">
+                    <p>已选择文件: <span id="selected-file-name"></span></p>
+                </div>
+                
+                <div class="btn-group">
+                    <button id="cancel-import-bank" class="btn btn-secondary">取消</button>
+                    <button id="confirm-import-bank" class="btn" disabled>导入题库</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 测试完成模态框 -->
+        <div id="complete-modal" class="modal">
+            <div class="modal-content">
+                <h2 class="modal-title">测试完成！</h2>
+                <div style="text-align: center; margin: 30px 0;">
+                    <div style="font-size: 4rem; color: #4CAF50; margin-bottom: 20px;">✓</div>
+                    <p style="font-size: 1.1rem; margin-bottom: 15px;">感谢您完成人才评估测试。</p>
+                    <p style="color: #666;">您的结果已提交，管理员可以在后台查看测试结果和统计信息。</p>
+                    <p style="color: #666; margin-top: 10px;">请注意：测试结果不会在前台显示，只有管理员可以查看详细分析。</p>
+                </div>
+                <div class="btn-group">
+                    <button id="continue-test-btn" class="btn">继续测试其他题库</button>
+                    <button id="back-to-home" class="btn btn-secondary">返回首页</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 维度套账编辑模态框 -->
+        <div id="dimension-set-edit-modal" class="modal">
+            <div class="modal-content">
+                <h2 class="modal-title">编辑维度套账</h2>
+                <div class="form-group">
+                    <label for="dimension-set-name">套账名称</label>
+                    <input type="text" id="dimension-set-name" placeholder="请输入维度套账名称">
+                </div>
+                
+                <div class="dimension-list" id="dimension-set-dimension-list">
+                    <!-- 维度列表将在这里显示 -->
+                </div>
+                
+                <div style="margin-top: 20px; display: flex; gap: 10px;">
+                    <input type="text" id="new-dimension-name" placeholder="新维度名称" style="flex: 1;">
+                    <input type="color" id="new-dimension-color" value="#2575fc" style="width: 60px;">
+                    <button id="add-dimension-to-set-btn" class="dimension-add-btn">添加维度</button>
+                </div>
+                
+                <div class="btn-group" style="margin-top: 30px;">
+                    <button id="cancel-dimension-set-edit" class="btn btn-secondary">取消</button>
+                    <button id="save-dimension-set-btn" class="btn">保存套账</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 导入维度套账模态框 -->
+        <div id="import-dimension-set-modal" class="modal">
+            <div class="modal-content">
+                <h2 class="modal-title">导入维度套账</h2>
+                <div class="alert alert-info">
+                    <p><strong>导入说明：</strong></p>
+                    <p>1. 请使用系统导出的模板文件进行编辑</p>
+                    <p>2. 维度套账文件应包含套账名称和维度列表</p>
+                    <p>3. 请确保Excel文件格式正确，不要修改表头</p>
+                </div>
+                
+                <div class="file-upload-area" id="dimension-file-upload-area">
+                    <div class="file-upload-icon">📁</div>
+                    <p style="font-size: 1.1rem; margin-bottom: 10px;">点击或拖拽Excel文件到这里</p>
+                    <p style="color: #666; font-size: 0.9rem;">支持.xlsx和.xls格式</p>
+                    <input type="file" id="dimension-excel-file" class="file-input" accept=".xlsx,.xls">
+                </div>
+                
+                <div id="dimension-file-info" style="display: none; margin-bottom: 20px;">
+                    <p>已选择文件: <span id="selected-dimension-file-name"></span></p>
+                </div>
+                
+                <div class="btn-group">
+                    <button id="cancel-import-dimension-set" class="btn btn-secondary">取消</button>
+                    <button id="confirm-import-dimension-set" class="btn" disabled>导入维度套账</button>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>人才评测工具 &copy; 2023 | 专业人才评估系统 | 所有测试结果保密</p>
+        </footer>
+    </div>
+
+    <script>
+        // 全局变量
+        let currentQuestions = [];
+        let testAnswers = [];
+        let testResults = [];
+        let questionBanks = [];
+        let dimensionSets = []; // 维度套账数组
+        let adminPassword = "8888";
+        let isAdminLoggedIn = false;
+        let radarChart = null;
+        let currentUser = "";
+        let currentQuestionIndex = 0;
+        let selectedBankId = null;
+        let editingBankId = null;
+        let viewingResultId = null;
+        let selectedFile = null;
+        let selectedDimensionFile = null; // 维度套账文件
+        let editingDimensionSetId = null; // 当前编辑的维度套账ID
+        let selectedBackupFile = null; // 备份文件
+        
+        // 初始化默认维度套账
+        function initDefaultDimensionSets() {
+            if (localStorage.getItem("talentDimensionSets")) return;
+            
+            const defaultDimensionSet = {
+                id: 1,
+                name: "维度1",
+                dimensions: {
+                    leadership: { name: "领导力", color: "#FF6B6B" },
+                    teamwork: { name: "团队协作", color: "#4ECDC4" },
+                    creativity: { name: "创造力", color: "#FFD166" },
+                    analysis: { name: "分析能力", color: "#06D6A0" },
+                    execution: { name: "执行力", color: "#118AB2" }
+                }
+            };
+            
+            localStorage.setItem("talentDimensionSets", JSON.stringify([defaultDimensionSet]));
+        }
+        
+        // 加载维度套账
+        function loadDimensionSets() {
+            const sets = JSON.parse(localStorage.getItem("talentDimensionSets")) || [];
+            dimensionSets = sets;
+            return sets;
+        }
+        
+        // 保存维度套账
+        function saveDimensionSets(sets) {
+            localStorage.setItem("talentDimensionSets", JSON.stringify(sets));
+            dimensionSets = sets;
+        }
+        
+        // 获取维度套账名称
+        function getDimensionSetName(setId) {
+            const set = dimensionSets.find(s => s.id === setId);
+            return set ? set.name : "未知套账";
+        }
+        
+        // 获取指定维度套账的维度
+        function getDimensionsBySetId(setId) {
+            const set = dimensionSets.find(s => s.id === setId);
+            return set ? set.dimensions : {};
+        }
+        
+        // 初始化示例题库
+        function initSampleQuestionBanks() {
+            if (localStorage.getItem("talentQuestionBanks")) return;
+            
+            const sampleBanks = [
+                {
+                    id: 1,
+                    name: "测试题1",
+                    description: "人才能力评估测试",
+                    dimensionSetId: 1, // 关联维度套账1
+                    questions: [
+                        {
+                            id: 1,
+                            text: "当团队遇到困难时，我更倾向于：",
+                            optionA: { text: "带领团队寻找解决方案", dimension: "leadership" },
+                            optionB: { text: "与团队成员一起讨论应对策略", dimension: "teamwork" }
+                        },
+                        {
+                            id: 2,
+                            text: "在团队决策中，我通常：",
+                            optionA: { text: "提出明确的建议和方向", dimension: "leadership" },
+                            optionB: { text: "综合考虑各种意见后决定", dimension: "teamwork" }
+                        }
+                    ]
+                },
+                {
+                    id: 2,
+                    name: "测试题2",
+                    description: "人才能力评估测试",
+                    dimensionSetId: 1, // 关联维度套账1
+                    questions: [
+                        {
+                            id: 1,
+                            text: "面对新项目时，我首先会：",
+                            optionA: { text: "分析项目的可行性和风险", dimension: "analysis" },
+                            optionB: { text: "构思创新的解决方案", dimension: "creativity" }
+                        },
+                        {
+                            id: 2,
+                            text: "解决问题时，我通常：",
+                            optionA: { text: "尝试全新的方法和思路", dimension: "creativity" },
+                            optionB: { text: "按照经验和方法逐步解决", dimension: "execution" }
+                        }
+                    ]
+                }
+            ];
+            
+            localStorage.setItem("talentQuestionBanks", JSON.stringify(sampleBanks));
+        }
+        
+        // 加载题库
+        function loadQuestionBanks() {
+            const banks = JSON.parse(localStorage.getItem("talentQuestionBanks")) || [];
+            questionBanks = banks;
+            updateBankCount();
+            return banks;
+        }
+        
+        // 保存题库
+        function saveQuestionBanks(banks) {
+            localStorage.setItem("talentQuestionBanks", JSON.stringify(banks));
+            questionBanks = banks;
+            updateBankCount();
+        }
+        
+        // 加载测试结果
+        function loadResults() {
+            const results = JSON.parse(localStorage.getItem("talentResults")) || [];
+            testResults = results;
+            updateResultCount();
+            return results;
+        }
+        
+        // 保存测试结果
+        function saveResults(results) {
+            localStorage.setItem("talentResults", JSON.stringify(results));
+            testResults = results;
+            updateResultCount();
+        }
+        
+        // 更新题库计数
+        function updateBankCount() {
+            document.getElementById("system-bank-count").textContent = questionBanks.length;
+        }
+        
+        // 更新结果计数
+        function updateResultCount() {
+            document.getElementById("system-result-count").textContent = testResults.length;
+            
+            if (testResults.length > 0) {
+                const lastResult = testResults[testResults.length - 1];
+                document.getElementById("last-test-time").textContent = lastResult.timestamp;
+            }
+        }
+        
+        // 更新头部按钮
+        function updateHeaderButton() {
+            const headerBtn = document.getElementById("header-action-btn");
+            
+            if (isAdminLoggedIn) {
+                headerBtn.textContent = "返回首页";
+                headerBtn.classList.remove("admin-login-btn");
+                headerBtn.classList.add("back-home-btn");
+                // 移除之前的事件监听器，添加新的事件监听器
+                headerBtn.onclick = function() {
+                    // 退出登录状态
+                    isAdminLoggedIn = false;
+                    showHomePage();
+                };
+            } else {
+                headerBtn.textContent = "管理员登录";
+                headerBtn.classList.remove("back-home-btn");
+                headerBtn.classList.add("admin-login-btn");
+                headerBtn.onclick = showAdminPage;
+            }
+        }
+        
+        // 加载首页文字设置
+        function loadHomeTextSettings() {
+            const settings = JSON.parse(localStorage.getItem("talentHomeText")) || {
+                logoText: "人才评测工具",
+                mainTitle: "专业人才能力评估系统",
+                subtitle: "通过科学的评估模型，帮助您了解个人在领导力、团队协作、创造力、分析能力和执行力等关键维度的表现，为个人发展和团队建设提供参考。"
+            };
+            
+            // 更新表单
+            if (document.getElementById("home-logo-text")) {
+                document.getElementById("home-logo-text").value = settings.logoText;
+                document.getElementById("home-main-title").value = settings.mainTitle;
+                document.getElementById("home-subtitle").value = settings.subtitle;
+            }
+            
+            // 更新页面显示
+            document.getElementById("logo-text").textContent = settings.logoText;
+            document.getElementById("main-title").textContent = settings.mainTitle;
+            document.getElementById("subtitle-text").textContent = settings.subtitle;
+            
+            return settings;
+        }
+        
+        // 保存首页文字设置
+        function saveHomeTextSettings() {
+            const settings = {
+                logoText: document.getElementById("home-logo-text").value.trim() || "人才评测工具",
+                mainTitle: document.getElementById("home-main-title").value.trim() || "专业人才能力评估系统",
+                subtitle: document.getElementById("home-subtitle").value.trim() || "通过科学的评估模型，帮助您了解个人在领导力、团队协作、创造力、分析能力和执行力等关键维度的表现，为个人发展和团队建设提供参考。"
+            };
+            
+            localStorage.setItem("talentHomeText", JSON.stringify(settings));
+            
+            // 更新页面显示
+            document.getElementById("logo-text").textContent = settings.logoText;
+            document.getElementById("main-title").textContent = settings.mainTitle;
+            document.getElementById("subtitle-text").textContent = settings.subtitle;
+            
+            alert("首页文字设置已保存！");
+        }
+        
+        // 显示首页
+        function showHomePage() {
+            document.getElementById("home-page").style.display = "flex";
+            document.getElementById("bank-selection-page").style.display = "none";
+            document.getElementById("test-page").style.display = "none";
+            document.getElementById("admin-page").style.display = "none";
+            document.getElementById("bank-edit-page").style.display = "none";
+            document.getElementById("result-detail-page").style.display = "none";
+            
+            // 重置测试状态
+            resetTest();
+            
+            // 更新头部按钮（确保按钮状态正确）
+            updateHeaderButton();
+        }
+        
+        // 显示题库选择页面
+        function showBankSelectionPage() {
+            document.getElementById("home-page").style.display = "none";
+            document.getElementById("bank-selection-page").style.display = "block";
+            document.getElementById("test-page").style.display = "none";
+            document.getElementById("admin-page").style.display = "none";
+            document.getElementById("bank-edit-page").style.display = "none";
+            document.getElementById("result-detail-page").style.display = "none";
+            
+            // 显示用户信息
+            document.getElementById("current-user").textContent = currentUser;
+            
+            // 渲染题库选择
+            renderBankSelection();
+            
+            // 更新头部按钮
+            updateHeaderButton();
+        }
+        
+        // 显示测试页面
+        function showTestPage() {
+            document.getElementById("home-page").style.display = "none";
+            document.getElementById("bank-selection-page").style.display = "none";
+            document.getElementById("test-page").style.display = "block";
+            document.getElementById("admin-page").style.display = "none";
+            document.getElementById("bank-edit-page").style.display = "none";
+            document.getElementById("result-detail-page").style.display = "none";
+            
+            // 显示用户信息和题库名称
+            document.getElementById("test-page-user").textContent = currentUser;
+            const selectedBank = questionBanks.find(bank => bank.id === selectedBankId);
+            if (selectedBank) {
+                document.getElementById("test-bank-name").textContent = "人才能力评估测试";
+            }
+            
+            // 渲染测试题
+            renderCurrentQuestion();
+            
+            // 更新头部按钮
+            updateHeaderButton();
+        }
+        
+        // 显示后台管理页面
+        function showAdminPage() {
+            document.getElementById("home-page").style.display = "none";
+            document.getElementById("bank-selection-page").style.display = "none";
+            document.getElementById("test-page").style.display = "none";
+            document.getElementById("admin-page").style.display = "block";
+            document.getElementById("bank-edit-page").style.display = "none";
+            document.getElementById("result-detail-page").style.display = "none";
+            
+            // 如果未登录，显示登录界面
+            if (!isAdminLoggedIn) {
+                document.getElementById("login-section").style.display = "block";
+                document.getElementById("admin-section").style.display = "none";
+            } else {
+                document.getElementById("login-section").style.display = "none";
+                document.getElementById("admin-section").style.display = "block";
+                renderBankManagement();
+                renderDimensionSets();
+                renderResults();
+                loadHomeTextSettings(); // 加载首页文字设置
+            }
+            
+            // 更新头部按钮
+            updateHeaderButton();
+        }
+        
+        // 显示题库编辑页面
+        function showBankEditPage(bankId) {
+            document.getElementById("home-page").style.display = "none";
+            document.getElementById("bank-selection-page").style.display = "none";
+            document.getElementById("test-page").style.display = "none";
+            document.getElementById("admin-page").style.display = "none";
+            document.getElementById("bank-edit-page").style.display = "block";
+            document.getElementById("result-detail-page").style.display = "none";
+            
+            editingBankId = bankId;
+            const bank = questionBanks.find(b => b.id === bankId);
+            if (bank) {
+                document.getElementById("edit-bank-name").textContent = bank.name;
+                document.getElementById("edit-bank-desc").textContent = bank.description || "暂无描述";
+                document.getElementById("edit-bank-name-input").value = bank.name;
+                document.getElementById("edit-bank-desc-input").value = bank.description || "";
+                
+                // 更新维度套账选择
+                updateDimensionSetSelects();
+                
+                // 设置当前题库的维度套账
+                document.getElementById("edit-bank-dimension-set").value = bank.dimensionSetId || 1;
+                
+                // 更新题目列表和维度下拉框
+                renderQuestionList(bank.questions);
+                updateDimensionSelects(bank.dimensionSetId || 1);
+            }
+            
+            // 更新头部按钮
+            updateHeaderButton();
+        }
+        
+        // 显示结果详情页面
+        function showResultDetailPage(resultId) {
+            document.getElementById("home-page").style.display = "none";
+            document.getElementById("bank-selection-page").style.display = "none";
+            document.getElementById("test-page").style.display = "none";
+            document.getElementById("admin-page").style.display = "none";
+            document.getElementById("bank-edit-page").style.display = "none";
+            document.getElementById("result-detail-page").style.display = "block";
+            
+            viewingResultId = resultId;
+            const result = testResults.find(r => r.id === resultId);
+            if (result) {
+                document.getElementById("detail-user-name").textContent = result.userName || "匿名用户";
+                document.getElementById("detail-bank-name").textContent = result.bankName || "未知题库";
+                document.getElementById("detail-test-time").textContent = result.timestamp;
+                
+                // 渲染雷达图
+                renderResultRadarChart(result);
+                
+                // 渲染维度排名
+                renderDimensionRanking(result);
+            }
+            
+            // 更新头部按钮
+            updateHeaderButton();
+        }
+        
+        // 渲染题库选择
+        function renderBankSelection() {
+            const container = document.getElementById("bank-selection-grid");
+            const banks = loadQuestionBanks();
+            
+            if (banks.length === 0) {
+                container.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                        <p style="color: #666; font-size: 1.1rem;">暂无可用题库，请联系管理员添加。</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = "";
+            selectedBankId = null;
+            document.getElementById("start-selected-test").disabled = true;
+            
+            banks.forEach((bank, index) => {
+                const bankElement = document.createElement("div");
+                bankElement.className = "bank-card";
+                bankElement.dataset.bankId = bank.id;
+                
+                // 修改：只显示"测试题1"、"测试题2"等，不显示描述
+                const displayName = `测试题${index + 1}`;
+                
+                bankElement.innerHTML = `
+                    <div class="bank-icon">${index + 1}</div>
+                    <div class="bank-name">${displayName}</div>
+                    <div class="bank-info">
+                        <span>${bank.questions.length} 个问题</span>
+                        <span>点击选择</span>
+                    </div>
+                `;
+                
+                bankElement.addEventListener("click", function() {
+                    // 移除所有卡片的选中状态
+                    document.querySelectorAll(".bank-card").forEach(card => {
+                        card.classList.remove("selected");
+                    });
+                    
+                    // 添加当前卡片的选中状态
+                    this.classList.add("selected");
+                    selectedBankId = parseInt(this.dataset.bankId);
+                    document.getElementById("start-selected-test").disabled = false;
+                });
+                
+                container.appendChild(bankElement);
+            });
+        }
+        
+        // 渲染当前问题
+        function renderCurrentQuestion() {
+            const container = document.getElementById("test-container");
+            const bank = questionBanks.find(b => b.id === selectedBankId);
+            
+            if (!bank || bank.questions.length === 0) {
+                container.innerHTML = `
+                    <div class="card">
+                        <div class="alert alert-error">
+                            <p>题库暂时为空，请联系管理员添加测试题目。</p>
+                        </div>
+                    </div>
+                `;
+                document.getElementById("prev-question").style.display = "none";
+                document.getElementById("next-question").style.display = "none";
+                document.getElementById("submit-test").style.display = "none";
+                return;
+            }
+            
+            const questions = bank.questions;
+            const question = questions[currentQuestionIndex];
+            const totalQuestions = questions.length;
+            
+            // 更新进度条
+            document.getElementById("current-question").textContent = currentQuestionIndex + 1;
+            document.getElementById("total-questions").textContent = totalQuestions;
+            document.getElementById("progress-fill").style.width = `${((currentQuestionIndex + 1) / totalQuestions) * 100}%`;
+            
+            // 修改：新的选项HTML结构，取消圆圈符号，只保留文字
+            container.innerHTML = `
+                <div class="question-item">
+                    <div class="question-text">${currentQuestionIndex + 1}. ${question.text}</div>
+                    <div class="options">
+                        <div class="option" data-option="A" id="option-a">
+                            <div class="option-label">
+                                <span class="option-letter">A.</span>
+                                <span>${question.optionA.text}</span>
+                            </div>
+                        </div>
+                        <div class="option" data-option="B" id="option-b">
+                            <div class="option-label">
+                                <span class="option-letter">B.</span>
+                                <span>${question.optionB.text}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // 检查是否有已保存的答案
+            const savedAnswer = testAnswers.find(a => a.questionId === question.id);
+            if (savedAnswer) {
+                const optionElement = document.getElementById(`option-${savedAnswer.answer.toLowerCase()}`);
+                if (optionElement) {
+                    optionElement.classList.add("selected");
+                }
+            }
+            
+            // 添加选项点击事件
+            document.querySelectorAll(".option").forEach(option => {
+                option.addEventListener("click", function() {
+                    const selectedOption = this.getAttribute("data-option");
+                    
+                    // 更新UI
+                    document.querySelectorAll(".option").forEach(opt => {
+                        opt.classList.remove("selected");
+                    });
+                    this.classList.add("selected");
+                    
+                    // 保存答案
+                    saveAnswer(question.id, selectedOption);
+                });
+            });
+            
+            // 更新按钮状态
+            document.getElementById("prev-question").style.display = currentQuestionIndex === 0 ? "none" : "inline-block";
+            document.getElementById("next-question").style.display = currentQuestionIndex === totalQuestions - 1 ? "none" : "inline-block";
+            document.getElementById("submit-test").style.display = currentQuestionIndex === totalQuestions - 1 ? "inline-block" : "none";
+        }
+        
+        // 保存答案
+        function saveAnswer(questionId, answer) {
+            const existingAnswerIndex = testAnswers.findIndex(a => a.questionId === questionId);
+            if (existingAnswerIndex >= 0) {
+                testAnswers[existingAnswerIndex].answer = answer;
+            } else {
+                testAnswers.push({
+                    questionId,
+                    answer
+                });
+            }
+        }
+        
+        // 下一题
+        function nextQuestion() {
+            const bank = questionBanks.find(b => b.id === selectedBankId);
+            if (!bank) return;
+            
+            // 检查当前题目是否已回答
+            const currentQuestion = bank.questions[currentQuestionIndex];
+            const savedAnswer = testAnswers.find(a => a.questionId === currentQuestion.id);
+            
+            if (!savedAnswer) {
+                alert("请先回答当前问题！");
+                return;
+            }
+            
+            if (currentQuestionIndex < bank.questions.length - 1) {
+                currentQuestionIndex++;
+                renderCurrentQuestion();
+            }
+        }
+        
+        // 上一题
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                renderCurrentQuestion();
+            }
+        }
+        
+        // 提交测试
+        function submitTest() {
+            const bank = questionBanks.find(b => b.id === selectedBankId);
+            if (!bank) return;
+            
+            // 确保所有问题都已回答
+            if (testAnswers.length !== bank.questions.length) {
+                alert("请完成所有题目后再提交！");
+                return;
+            }
+            
+            // 计算维度得分
+            const dimensionCounts = {};
+            
+            // 获取题库对应的维度套账
+            const dimensionSet = dimensionSets.find(s => s.id === bank.dimensionSetId);
+            if (!dimensionSet) {
+                alert("题库关联的维度套账不存在，无法计算得分！");
+                return;
+            }
+            
+            // 初始化所有维度的计数为0
+            for (const dimKey in dimensionSet.dimensions) {
+                dimensionCounts[dimKey] = 0;
+            }
+            
+            testAnswers.forEach(answer => {
+                const question = bank.questions.find(q => q.id === answer.questionId);
+                if (question) {
+                    const selectedDimension = answer.answer === "A" 
+                        ? question.optionA.dimension 
+                        : question.optionB.dimension;
+                    
+                    // 如果维度为空，则不计数
+                    if (selectedDimension && dimensionCounts[selectedDimension] !== undefined) {
+                        dimensionCounts[selectedDimension]++;
+                    }
+                }
+            });
+            
+            // 创建测试结果
+            const result = {
+                id: Date.now(),
+                userName: currentUser,
+                bankId: selectedBankId,
+                bankName: bank.name,
+                timestamp: new Date().toLocaleString(),
+                dimensions: dimensionCounts,
+                answers: [...testAnswers]
+            };
+            
+            // 保存结果
+            const results = loadResults();
+            results.push(result);
+            saveResults(results);
+            
+            // 显示完成模态框
+            document.getElementById("complete-modal").classList.add("active");
+        }
+        
+        // 重置测试
+        function resetTest() {
+            currentQuestionIndex = 0;
+            testAnswers = [];
+            currentUser = "";
+            selectedBankId = null;
+        }
+        
+        // 渲染题库管理
+        function renderBankManagement() {
+            const container = document.getElementById("bank-management-grid");
+            const banks = loadQuestionBanks();
+            
+            if (banks.length === 0) {
+                container.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                        <p style="color: #666; font-size: 1.1rem;">暂无题库，请点击"新增题库"按钮创建。</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = "";
+            
+            banks.forEach(bank => {
+                const bankElement = document.createElement("div");
+                bankElement.className = "bank-management-card";
+                
+                bankElement.innerHTML = `
+                    <div class="bank-name">${bank.name}</div>
+                    <p style="color: #666; margin: 10px 0; font-size: 0.95rem;">${bank.description || "暂无描述"}</p>
+                    <p style="color: #666; font-size: 0.9rem;">维度套账: ${getDimensionSetName(bank.dimensionSetId)}</p>
+                    <div class="question-count-badge">${bank.questions.length} 个问题</div>
+                    <div class="bank-actions">
+                        <button class="btn" onclick="editBank(${bank.id})">编辑题库</button>
+                        <button class="btn btn-danger" onclick="deleteBank(${bank.id})">删除</button>
+                    </div>
+                `;
+                
+                container.appendChild(bankElement);
+            });
+        }
+        
+        // 编辑题库
+        function editBank(bankId) {
+            showBankEditPage(bankId);
+        }
+        
+        // 删除题库
+        function deleteBank(bankId) {
+            if (!confirm("确定要删除这个题库吗？此操作将同时删除题库中的所有题目！")) return;
+            
+            const banks = loadQuestionBanks();
+            const updatedBanks = banks.filter(b => b.id !== bankId);
+            saveQuestionBanks(updatedBanks);
+            
+            renderBankManagement();
+        }
+        
+        // 渲染维度套账管理
+        function renderDimensionSets() {
+            const container = document.getElementById("dimension-set-list");
+            const sets = loadDimensionSets();
+            
+            if (sets.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 30px; color: #666;">
+                        <p>暂无维度套账，请点击"新增维度套账"按钮创建。</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = "";
+            
+            sets.forEach(set => {
+                const setElement = document.createElement("div");
+                setElement.className = "dimension-set-item";
+                setElement.dataset.setId = set.id;
+                
+                // 统计维度数量
+                const dimensionCount = Object.keys(set.dimensions).length;
+                
+                // 生成维度标签
+                let dimensionTags = "";
+                for (const key in set.dimensions) {
+                    const dim = set.dimensions[key];
+                    dimensionTags += `
+                        <div class="dimension-in-set">
+                            <div class="dimension-in-set-color" style="background-color: ${dim.color};"></div>
+                            <span>${dim.name}</span>
+                        </div>
+                    `;
+                }
+                
+                setElement.innerHTML = `
+                    <div class="dimension-set-header">
+                        <div class="dimension-set-name">${set.name}</div>
+                        <div class="dimension-set-actions">
+                            <button class="btn" onclick="editDimensionSet(${set.id})" style="padding: 5px 10px; font-size: 0.9rem;">编辑</button>
+                            <button class="btn btn-danger" onclick="deleteDimensionSet(${set.id})" style="padding: 5px 10px; font-size: 0.9rem;" ${set.id === 1 ? 'disabled' : ''}>删除</button>
+                        </div>
+                    </div>
+                    <div class="dimension-set-dimensions">
+                        ${dimensionTags}
+                    </div>
+                    <p style="color: #666; font-size: 0.9rem; margin-top: 10px;">共 ${dimensionCount} 个维度</p>
+                `;
+                
+                container.appendChild(setElement);
+            });
+        }
+        
+        // 编辑维度套账
+        function editDimensionSet(setId) {
+            editingDimensionSetId = setId;
+            const set = dimensionSets.find(s => s.id === setId);
+            
+            if (set) {
+                document.getElementById("dimension-set-name").value = set.name;
+                renderDimensionSetDimensions(set.dimensions);
+                document.getElementById("dimension-set-edit-modal").classList.add("active");
+            }
+        }
+        
+        // 渲染维度套账中的维度列表
+        function renderDimensionSetDimensions(dimensions) {
+            const container = document.getElementById("dimension-set-dimension-list");
+            container.innerHTML = "";
+            
+            for (const key in dimensions) {
+                const dim = dimensions[key];
+                const dimensionElement = document.createElement("div");
+                dimensionElement.className = "dimension-item";
+                dimensionElement.innerHTML = `
+                    <div class="dimension-color" style="background-color: ${dim.color};"></div>
+                    <input type="text" class="dimension-name-input" value="${dim.name}" data-key="${key}" onchange="updateDimensionInSet('${key}', this.value)">
+                    <input type="color" value="${dim.color}" data-key="${key}" onchange="updateDimensionColorInSet('${key}', this.value)" style="width: 40px; height: 30px; padding: 0;">
+                    <button class="dimension-remove-btn" onclick="removeDimensionFromSet('${key}')" ${editingDimensionSetId === 1 && Object.keys(getDimensionsBySetId(1)).length <= 1 ? 'disabled' : ''}>×</button>
+                `;
+                container.appendChild(dimensionElement);
+            }
+        }
+        
+        // 新增维度套账
+        function addNewDimensionSet() {
+            const sets = loadDimensionSets();
+            const newId = sets.length > 0 ? Math.max(...sets.map(s => s.id)) + 1 : 1;
+            const newName = `维度${newId}`;
+            
+            // 创建默认维度
+            const defaultDimensions = {
+                dimension1: { name: "维度A", color: "#FF6B6B" },
+                dimension2: { name: "维度B", color: "#4ECDC4" },
+                dimension3: { name: "维度C", color: "#FFD166" }
+            };
+            
+            const newSet = {
+                id: newId,
+                name: newName,
+                dimensions: defaultDimensions
+            };
+            
+            sets.push(newSet);
+            saveDimensionSets(sets);
+            
+            // 重新渲染维度套账列表
+            renderDimensionSets();
+            
+            // 更新维度套账下拉框
+            updateDimensionSetSelects();
+            
+            alert(`维度套账"${newName}"创建成功！`);
+        }
+        
+        // 保存维度套账
+        function saveDimensionSet() {
+            const name = document.getElementById("dimension-set-name").value.trim();
+            
+            if (!name) {
+                alert("请输入维度套账名称！");
+                return;
+            }
+            
+            const sets = loadDimensionSets();
+            const setIndex = sets.findIndex(s => s.id === editingDimensionSetId);
+            
+            if (setIndex !== -1) {
+                sets[setIndex].name = name;
+                saveDimensionSets(sets);
+                
+                // 关闭模态框
+                document.getElementById("dimension-set-edit-modal").classList.remove("active");
+                
+                // 重新渲染维度套账列表
+                renderDimensionSets();
+                
+                // 更新维度套账下拉框
+                updateDimensionSetSelects();
+                
+                alert("维度套账保存成功！");
+            }
+        }
+        
+        // 删除维度套账
+        function deleteDimensionSet(setId) {
+            if (setId === 1) {
+                alert("维度1是默认套账，不可删除！");
+                return;
+            }
+            
+            if (!confirm("确定要删除这个维度套账吗？如果题库正在使用此套账，删除后将无法正常显示维度！")) return;
+            
+            const sets = loadDimensionSets();
+            const updatedSets = sets.filter(s => s.id !== setId);
+            saveDimensionSets(updatedSets);
+            
+            // 重新渲染维度套账列表
+            renderDimensionSets();
+            
+            // 更新维度套账下拉框
+            updateDimensionSetSelects();
+            
+            alert("维度套账删除成功！");
+        }
+        
+        // 更新维度套账中的维度名称
+        function updateDimensionInSet(key, newName) {
+            const sets = loadDimensionSets();
+            const setIndex = sets.findIndex(s => s.id === editingDimensionSetId);
+            
+            if (setIndex !== -1 && sets[setIndex].dimensions[key]) {
+                sets[setIndex].dimensions[key].name = newName;
+                saveDimensionSets(sets);
+            }
+        }
+        
+        // 更新维度套账中的维度颜色
+        function updateDimensionColorInSet(key, newColor) {
+            const sets = loadDimensionSets();
+            const setIndex = sets.findIndex(s => s.id === editingDimensionSetId);
+            
+            if (setIndex !== -1 && sets[setIndex].dimensions[key]) {
+                sets[setIndex].dimensions[key].color = newColor;
+                saveDimensionSets(sets);
+            }
+        }
+        
+        // 添加维度到维度套账
+        function addDimensionToSet() {
+            const nameInput = document.getElementById("new-dimension-name");
+            const colorInput = document.getElementById("new-dimension-color");
+            
+            const name = nameInput.value.trim();
+            const color = colorInput.value;
+            
+            if (!name) {
+                alert("请输入维度名称！");
+                return;
+            }
+            
+            const sets = loadDimensionSets();
+            const setIndex = sets.findIndex(s => s.id === editingDimensionSetId);
+            
+            if (setIndex !== -1) {
+                // 生成唯一的key
+                const key = "dim_" + Date.now() + "_" + i;
+                
+                sets[setIndex].dimensions[key] = {
+                    name: name,
+                    color: color
+                };
+                
+                saveDimensionSets(sets);
+                
+                // 清空输入框
+                nameInput.value = "";
+                
+                // 重新渲染维度列表
+                renderDimensionSetDimensions(sets[setIndex].dimensions);
+                
+                alert("维度添加成功！");
+            }
+        }
+        
+        // 从维度套账中删除维度
+        function removeDimensionFromSet(key) {
+            if (editingDimensionSetId === 1 && Object.keys(getDimensionsBySetId(1)).length <= 1) {
+                alert("维度1中至少需要保留一个维度！");
+                return;
+            }
+            
+            if (!confirm("确定要删除这个维度吗？如果题目中使用了这个维度，可能会影响已有测试结果！")) return;
+            
+            const sets = loadDimensionSets();
+            const setIndex = sets.findIndex(s => s.id === editingDimensionSetId);
+            
+            if (setIndex !== -1) {
+                delete sets[setIndex].dimensions[key];
+                saveDimensionSets(sets);
+                
+                // 重新渲染维度列表
+                renderDimensionSetDimensions(sets[setIndex].dimensions);
+            }
+        }
+        
+        // 渲染维度排名
+        function renderDimensionRanking(result) {
+            const container = document.getElementById("dimension-ranking");
+            const bank = questionBanks.find(b => b.id === result.bankId);
+            let dims = {};
+            
+            if (bank && bank.dimensionSetId) {
+                dims = getDimensionsBySetId(bank.dimensionSetId);
+            } else {
+                // 如果没有找到维度套账，使用默认维度套账1
+                dims = getDimensionsBySetId(1);
+            }
+            
+            // 计算百分比
+            const totalQuestions = Object.values(result.dimensions).reduce((sum, count) => sum + count, 0);
+            const percentages = {};
+            
+            for (const dim in result.dimensions) {
+                percentages[dim] = totalQuestions > 0 ? (result.dimensions[dim] / totalQuestions) * 100 : 0;
+            }
+            
+            // 创建排名数组
+            const ranking = [];
+            for (const dimKey in dims) {
+                if (percentages[dimKey] !== undefined) {
+                    ranking.push({
+                        key: dimKey,
+                        name: dims[dimKey].name,
+                        color: dims[dimKey].color,
+                        score: percentages[dimKey],
+                        count: result.dimensions[dimKey] || 0
+                    });
+                }
+            }
+            
+            // 按得分从高到低排序
+            ranking.sort((a, b) => b.score - a.score);
+            
+            // 生成HTML
+            let rankingHTML = `
+                <div class="ranking-title">维度得分排名</div>
+                <div class="ranking-list">
+            `;
+            
+            if (ranking.length === 0) {
+                rankingHTML += `<p style="text-align: center; color: #666; padding: 20px;">暂无维度数据</p>`;
+            } else {
+                ranking.forEach((item, index) => {
+                    const rankClass = index < 3 ? `rank-${index + 1}` : '';
+                    rankingHTML += `
+                        <div class="ranking-item">
+                            <div class="ranking-rank ${rankClass}">${index + 1}</div>
+                            <div class="ranking-dimension">
+                                <div class="ranking-color" style="background-color: ${item.color};"></div>
+                                <div class="ranking-name">${item.name}</div>
+                            </div>
+                            <div class="ranking-score">${item.score.toFixed(1)}% (${item.count}题)</div>
+                        </div>
+                    `;
+                });
+            }
+            
+            rankingHTML += `</div>`;
+            container.innerHTML = rankingHTML;
+        }
+        
+        // 渲染测试结果列表（增加删除按钮）
+        function renderResults() {
+            const container = document.getElementById("results-list");
+            const results = loadResults();
+            
+            // 应用筛选
+            const filter = document.getElementById("result-filter").value;
+            let filteredResults = [...results];
+            
+            if (filter !== "all") {
+                const now = new Date();
+                filteredResults = results.filter(result => {
+                    const resultDate = new Date(result.id);
+                    
+                    if (filter === "today") {
+                        return resultDate.toDateString() === now.toDateString();
+                    } else if (filter === "week") {
+                        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                        return resultDate >= weekAgo;
+                    } else if (filter === "month") {
+                        const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                        return resultDate >= monthAgo;
+                    }
+                    return true;
+                });
+            }
+            
+            if (filteredResults.length === 0) {
+                container.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 30px;">暂无测试结果</td></tr>`;
+                return;
+            }
+            
+            container.innerHTML = "";
+            
+            // 显示最新结果在前
+            filteredResults.reverse().forEach(result => {
+                const row = document.createElement("tr");
+                
+                row.innerHTML = `
+                    <td><a href="javascript:void(0)" class="user-link" onclick="viewResultDetail(${result.id})">${result.userName || "匿名用户"}</a></td>
+                    <td>${result.bankName || "未知题库"}</td>
+                    <td>${result.timestamp}</td>
+                    <td>
+                        <div style="display: flex; gap: 5px;">
+                            <button class="btn" style="padding: 5px 10px; font-size: 0.9rem;" onclick="viewResultDetail(${result.id})">查看</button>
+                            <button class="btn btn-danger" style="padding: 5px 10px; font-size: 0.9rem;" onclick="deleteResult(${result.id})">删除</button>
+                        </div>
+                    </td>
+                `;
+                container.appendChild(row);
+            });
+        }
+        
+        // 删除测试结果
+        function deleteResult(resultId) {
+            if (!confirm("确定要删除这条测试记录吗？此操作不可恢复！")) return;
+            
+            const results = loadResults();
+            const updatedResults = results.filter(r => r.id !== resultId);
+            saveResults(updatedResults);
+            
+            // 如果当前正在查看的详情页被删除，返回结果列表
+            if (viewingResultId === resultId) {
+                showAdminPage();
+            }
+            
+            renderResults();
+            alert("测试记录已删除！");
+        }
+        
+        // 更新维度套账下拉框（用于题库编辑）
+        function updateDimensionSetSelects() {
+            const sets = loadDimensionSets();
+            const newBankSelect = document.getElementById("new-bank-dimension-set");
+            const editBankSelect = document.getElementById("edit-bank-dimension-set");
+            
+            // 清空现有选项
+            newBankSelect.innerHTML = "";
+            editBankSelect.innerHTML = "";
+            
+            // 添加维度套账选项
+            sets.forEach(set => {
+                const option1 = document.createElement("option");
+                option1.value = set.id;
+                option1.textContent = set.name;
+                newBankSelect.appendChild(option1);
+                
+                const option2 = document.createElement("option");
+                option2.value = set.id;
+                option2.textContent = set.name;
+                editBankSelect.appendChild(option2);
+            });
+            
+            // 设置默认选项
+            if (newBankSelect.options.length > 0) {
+                newBankSelect.selectedIndex = 0;
+            }
+            if (editBankSelect.options.length > 0) {
+                editBankSelect.selectedIndex = 0;
+            }
+        }
+        
+        // 更新维度下拉框（根据维度套账）
+        function updateDimensionSelects(dimensionSetId) {
+            const dims = getDimensionsBySetId(dimensionSetId);
+            const selectA = document.getElementById("option-a-dimension");
+            const selectB = document.getElementById("option-b-dimension");
+            
+            // 清空现有选项
+            selectA.innerHTML = '<option value="">无维度</option>';
+            selectB.innerHTML = '<option value="">无维度</option>';
+            
+            // 添加维度选项
+            for (const key in dims) {
+                const optionA = document.createElement("option");
+                optionA.value = key;
+                optionA.textContent = dims[key].name;
+                selectA.appendChild(optionA);
+                
+                const optionB = document.createElement("option");
+                optionB.value = key;
+                optionB.textContent = dims[key].name;
+                selectB.appendChild(optionB);
+            }
+            
+            // 设置默认选项
+            if (selectA.options.length > 0) {
+                selectA.selectedIndex = 0;
+            }
+            if (selectB.options.length > 0) {
+                selectB.selectedIndex = Math.min(1, selectB.options.length - 1);
+            }
+        }
+        
+        // 渲染题目列表（编辑页面）
+        function renderQuestionList(questions) {
+            const container = document.getElementById("edit-question-list");
+            const countElement = document.getElementById("edit-question-count");
+            const bank = questionBanks.find(b => b.id === editingBankId);
+            
+            if (!bank) return;
+            
+            const dims = getDimensionsBySetId(bank.dimensionSetId || 1);
+            
+            if (!questions || questions.length === 0) {
+                container.innerHTML = "<p style='text-align: center; padding: 20px; color: #666;'>题库为空，请添加问题。</p>";
+                countElement.textContent = "0";
+                return;
+            }
+            
+            container.innerHTML = "";
+            countElement.textContent = questions.length;
+            
+            questions.forEach((question, index) => {
+                const questionElement = document.createElement("div");
+                questionElement.className = "question-list-item";
+                
+                // 获取维度名称
+                const dimNameA = question.optionA.dimension ? 
+                    (dims[question.optionA.dimension] ? dims[question.optionA.dimension].name : question.optionA.dimension) : 
+                    "无维度";
+                const dimNameB = question.optionB.dimension ? 
+                    (dims[question.optionB.dimension] ? dims[question.optionB.dimension].name : question.optionB.dimension) : 
+                    "无维度";
+                
+                questionElement.innerHTML = `
+                    <div class="question-list-text">
+                        <strong>${index + 1}.</strong> ${question.text}<br>
+                        <small style="color: #666;">
+                            A: ${question.optionA.text} (<span style="color: #2575fc;">${dimNameA}</span>) | 
+                            B: ${question.optionB.text} (<span style="color: #6a11cb;">${dimNameB}</span>)
+                        </small>
+                    </div>
+                    <div class="question-list-actions">
+                        <button class="btn btn-secondary" onclick="editQuestion(${question.id})" style="padding: 5px 10px; font-size: 0.9rem;">编辑</button>
+                        <button class="btn btn-danger" onclick="deleteQuestion(${question.id})" style="padding: 5px 10px; font-size: 0.9rem;">删除</button>
+                    </div>
+                `;
+                container.appendChild(questionElement);
+            });
+        }
+        
+        // 编辑题目
+        function editQuestion(questionId) {
+            const bank = questionBanks.find(b => b.id === editingBankId);
+            if (!bank) return;
+            
+            const question = bank.questions.find(q => q.id === questionId);
+            if (!question) return;
+            
+            // 填充表单
+            document.getElementById("question-text").value = question.text;
+            document.getElementById("option-a-text").value = question.optionA.text;
+            document.getElementById("option-a-dimension").value = question.optionA.dimension || "";
+            document.getElementById("option-b-text").value = question.optionB.text;
+            document.getElementById("option-b-dimension").value = question.optionB.dimension || "";
+            
+            // 标记当前编辑的问题ID
+            document.getElementById("add-question-btn").dataset.editingId = questionId;
+            document.getElementById("add-question-btn").textContent = "更新题目";
+        }
+        
+        // 删除题目
+        function deleteQuestion(questionId) {
+            if (!confirm("确定要删除这个问题吗？")) return;
+            
+            const banks = loadQuestionBanks();
+            const bankIndex = banks.findIndex(b => b.id === editingBankId);
+            if (bankIndex === -1) return;
+            
+            banks[bankIndex].questions = banks[bankIndex].questions.filter(q => q.id !== questionId);
+            saveQuestionBanks(banks);
+            
+            renderQuestionList(banks[bankIndex].questions);
+        }
+        
+        // 保存题库信息
+        function saveBankInfo() {
+            const bankName = document.getElementById("edit-bank-name-input").value.trim();
+            const bankDesc = document.getElementById("edit-bank-desc-input").value.trim();
+            const dimensionSetId = parseInt(document.getElementById("edit-bank-dimension-set").value);
+            
+            if (!bankName) {
+                alert("请输入题库名称！");
+                return;
+            }
+            
+            const banks = loadQuestionBanks();
+            const bankIndex = banks.findIndex(b => b.id === editingBankId);
+            if (bankIndex === -1) return;
+            
+            banks[bankIndex].name = bankName;
+            banks[bankIndex].description = bankDesc;
+            banks[bankIndex].dimensionSetId = dimensionSetId;
+            
+            saveQuestionBanks(banks);
+            
+            // 更新显示
+            document.getElementById("edit-bank-name").textContent = bankName;
+            document.getElementById("edit-bank-desc").textContent = bankDesc || "暂无描述";
+            
+            // 更新维度下拉框
+            updateDimensionSelects(dimensionSetId);
+            
+            alert("题库信息保存成功！");
+        }
+        
+        // 添加/更新题目
+        function addOrUpdateQuestion() {
+            const text = document.getElementById("question-text").value.trim();
+            const optionAText = document.getElementById("option-a-text").value.trim();
+            const optionADimension = document.getElementById("option-a-dimension").value;
+            const optionBText = document.getElementById("option-b-text").value.trim();
+            const optionBDimension = document.getElementById("option-b-dimension").value;
+            
+            if (!text || !optionAText || !optionBText) {
+                alert("请填写完整的问题和选项内容！");
+                return;
+            }
+            
+            // 删除维度验证，允许维度为空
+            
+            const banks = loadQuestionBanks();
+            const bankIndex = banks.findIndex(b => b.id === editingBankId);
+            if (bankIndex === -1) return;
+            
+            const editingId = document.getElementById("add-question-btn").dataset.editingId;
+            
+            if (editingId) {
+                // 更新现有问题
+                const questionIndex = banks[bankIndex].questions.findIndex(q => q.id === parseInt(editingId));
+                if (questionIndex !== -1) {
+                    banks[bankIndex].questions[questionIndex] = {
+                        id: parseInt(editingId),
+                        text,
+                        optionA: {
+                            text: optionAText,
+                            dimension: optionADimension || ""
+                        },
+                        optionB: {
+                            text: optionBText,
+                            dimension: optionBDimension || ""
+                        }
+                    };
+                }
+                
+                // 清除编辑状态
+                delete document.getElementById("add-question-btn").dataset.editingId;
+                document.getElementById("add-question-btn").textContent = "添加到题库";
+            } else {
+                // 添加新问题
+                const newId = banks[bankIndex].questions.length > 0 
+                    ? Math.max(...banks[bankIndex].questions.map(q => q.id)) + 1 
+                    : 1;
+                
+                const newQuestion = {
+                    id: newId,
+                    text,
+                    optionA: {
+                        text: optionAText,
+                        dimension: optionADimension || ""
+                    },
+                    optionB: {
+                        text: optionBText,
+                        dimension: optionBDimension || ""
+                    }
+                };
+                
+                banks[bankIndex].questions.push(newQuestion);
+            }
+            
+            saveQuestionBanks(banks);
+            
+            // 清空表单
+            document.getElementById("question-text").value = "";
+            document.getElementById("option-a-text").value = "";
+            document.getElementById("option-b-text").value = "";
+            
+            // 更新显示
+            renderQuestionList(banks[bankIndex].questions);
+            
+            alert(editingId ? "问题已更新！" : "问题已成功添加到题库！");
+        }
+        
+        // 查看结果详情
+        function viewResultDetail(resultId) {
+            showResultDetailPage(resultId);
+        }
+        
+        // 渲染结果雷达图
+        function renderResultRadarChart(result) {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            const bank = questionBanks.find(b => b.id === result.bankId);
+            let dims = {};
+            
+            if (bank && bank.dimensionSetId) {
+                dims = getDimensionsBySetId(bank.dimensionSetId);
+            } else {
+                // 如果没有找到维度套账，使用默认维度套账1
+                dims = getDimensionsBySetId(1);
+            }
+            
+            if (radarChart) {
+                radarChart.destroy();
+            }
+            
+            // 计算百分比并限制最大值为30
+            const totalQuestions = Object.values(result.dimensions).reduce((sum, count) => sum + count, 0);
+            const percentages = {};
+            
+            for (const dim in result.dimensions) {
+                let percentage = totalQuestions > 0 ? (result.dimensions[dim] / totalQuestions) * 100 : 0;
+                // 限制最大值为30
+                if (percentage > 30) percentage = 30;
+                percentages[dim] = percentage;
+            }
+            
+            // 准备雷达图数据
+            const labels = [];
+            const data = [];
+            const backgroundColors = [];
+            const borderColors = [];
+            
+            for (const dimKey in dims) {
+                if (percentages[dimKey] !== undefined) {
+                    labels.push(dims[dimKey].name);
+                    data.push(percentages[dimKey]);
+                    backgroundColors.push(dims[dimKey].color + "20");
+                    borderColors.push(dims[dimKey].color);
+                }
+            }
+            
+            // 修复雷达图显示问题：调整图表配置
+            radarChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '维度得分 (%)',
+                        data: data,
+                        backgroundColor: backgroundColors.length > 0 ? backgroundColors : 'rgba(37, 117, 252, 0.2)',
+                        borderColor: borderColors.length > 0 ? borderColors : 'rgba(37, 117, 252, 1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: borderColors.length > 0 ? borderColors : 'rgba(37, 117, 252, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: borderColors.length > 0 ? borderColors[0] : 'rgba(37, 117, 252, 1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 30, // 最大值为30
+                            min: 0,
+                            ticks: {
+                                stepSize: 10, // 步长为10，这样会显示0、10、20、30
+                                callback: function(value) {
+                                    return value + '%';
+                                },
+                                font: {
+                                    size: 12
+                                }
+                            },
+                            pointLabels: {
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                },
+                                color: '#333'
+                            },
+                            // 确保雷达图完全显示
+                            suggestedMin: 0,
+                            suggestedMax: 30,
+                            // 增加内边距，确保标签完全显示
+                            ticks: {
+                                backdropColor: 'rgba(255, 255, 255, 0.8)',
+                                backdropPadding: 4
+                            },
+                            grid: {
+                                circular: true
+                            },
+                            angleLines: {
+                                display: true,
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    size: 14
+                                },
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    const originalPercentage = (value / 30) * 100; // 计算原始百分比
+                                    return `${context.label}: ${originalPercentage.toFixed(1)}% (显示: ${value}%)`;
+                                }
+                            }
+                        }
+                    },
+                    // 增加图表内边距
+                    layout: {
+                        padding: {
+                            top: 20,
+                            right: 20,
+                            bottom: 20,
+                            left: 20
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 导出PNG报告
+        async function exportPNGReport() {
+            const result = testResults.find(r => r.id === viewingResultId);
+            if (!result) return;
+            
+            // 显示导出中提示
+            const exportBtn = document.getElementById("export-png-btn");
+            const originalText = exportBtn.textContent;
+            exportBtn.textContent = "正在生成PNG...";
+            exportBtn.disabled = true;
+            
+            try {
+                // 创建一个临时的div容器来包含要导出的内容
+                const exportContainer = document.createElement('div');
+                exportContainer.style.cssText = `
+                    position: fixed;
+                    top: -9999px;
+                    left: -9999px;
+                    width: 800px; /* 减小宽度 */
+                    background: white;
+                    padding: 30px;
+                    z-index: 9999;
+                    font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+                    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+                    box-sizing: box;
+                `;
+                
+                // 添加测试者信息和测试时间
+                exportContainer.innerHTML = `
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <h1 style="color: #2c3e50; font-size: 24px; margin-bottom: 10px;">人才评测报告</h1>
+                        <div style="border-bottom: 2px solid #f0f0f0; margin-bottom: 15px;"></div>
+                        <p style="font-size: 16px; color: #333; margin-bottom: 5px;">测试者: ${result.userName || "匿名用户"}</p>
+                        <p style="font-size: 14px; color: #666; margin-bottom: 5px;">测试题库: ${result.bankName || "未知题库"}</p>
+                        <p style="font-size: 14px; color: #666;">测试时间: ${result.timestamp}</p>
+                    </div>
+                    <div style="height: 15px;"></div>
+                `;
+                
+                // 获取雷达图canvas
+                const chartCanvas = document.getElementById('radarChart');
+                if (chartCanvas) {
+                    // 创建一个新的canvas用于导出，缩小尺寸
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = 600; // 减小宽度
+                    tempCanvas.height = 400; // 减小高度
+                    const tempCtx = tempCanvas.getContext('2d');
+                    
+                    // 设置背景色
+                    tempCtx.fillStyle = 'white';
+                    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                    
+                    // 绘制雷达图
+                    const radarChartImage = chartCanvas.toDataURL('image/png');
+                    const img = new Image();
+                    
+                    await new Promise((resolve, reject) => {
+                        img.onload = function() {
+                            // 使用较小的缩放比例，确保雷达图完全显示
+                            const scale = 0.8; // 减小缩放比例
+                            const scaledWidth = chartCanvas.width * scale;
+                            const scaledHeight = chartCanvas.height * scale;
+                            const x = (tempCanvas.width - scaledWidth) / 2;
+                            const y = 10; // 减小上边距
+                            
+                            // 保存上下文状态
+                            tempCtx.save();
+                            // 绘制白色背景
+                            tempCtx.fillStyle = 'white';
+                            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                            tempCtx.restore();
+                            
+                            // 绘制雷达图
+                            tempCtx.drawImage(img, x, y, scaledWidth, scaledHeight);
+                            
+                            // 将临时canvas添加到导出容器
+                            const imgElement = document.createElement('img');
+                            imgElement.src = tempCanvas.toDataURL('image/png');
+                            imgElement.style.cssText = 'width: 100%; height: auto; max-width: 600px; margin: 0 auto; display: block;';
+                            exportContainer.appendChild(imgElement);
+                            resolve();
+                        };
+                        img.onerror = reject;
+                        img.src = radarChartImage;
+                    });
+                }
+                
+                // 添加维度排名到导出容器
+                const rankingContainer = document.getElementById("dimension-ranking");
+                if (rankingContainer) {
+                    const rankingClone = rankingContainer.cloneNode(true);
+                    rankingClone.style.marginTop = "20px";
+                    rankingClone.style.padding = "15px";
+                    rankingClone.style.background = "#f8f9fa";
+                    rankingClone.style.borderRadius = "8px";
+                    rankingClone.style.fontSize = "14px";
+                    exportContainer.appendChild(rankingClone);
+                }
+                
+                // 将容器添加到body
+                document.body.appendChild(exportContainer);
+                
+                // 等待元素渲染
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // 使用html2canvas将整个容器转换为图片
+                const canvas = await html2canvas(exportContainer, {
+                    scale: 2, // 提高分辨率
+                    useCORS: true,
+                    backgroundColor: '#ffffff',
+                    logging: false,
+                    width: exportContainer.offsetWidth,
+                    height: exportContainer.offsetHeight,
+                    windowWidth: exportContainer.scrollWidth,
+                    windowHeight: exportContainer.scrollHeight
+                });
+                
+                // 移除临时容器
+                document.body.removeChild(exportContainer);
+                
+                // 将canvas转换为图片URL
+                const imgData = canvas.toDataURL('image/png');
+                
+                // 创建下载链接
+                const link = document.createElement('a');
+                link.download = `人才评测报告_${result.userName || "匿名"}_${new Date().toISOString().split('T')[0]}.png`;
+                link.href = imgData;
+                link.click();
+                
+            } catch (error) {
+                console.error("PNG导出失败:", error);
+                alert("PNG导出失败，请重试！");
+            } finally {
+                // 恢复按钮状态
+                exportBtn.textContent = originalText;
+                exportBtn.disabled = false;
+            }
+        }
+        
+        // 导出XLSX报告
+        async function exportXLSXReport() {
+            const result = testResults.find(r => r.id === viewingResultId);
+            if (!result) return;
+            
+            // 显示导出中提示
+            const exportBtn = document.getElementById("export-xlsx-btn");
+            const originalText = exportBtn.textContent;
+            exportBtn.textContent = "正在生成XLSX...";
+            exportBtn.disabled = true;
+            
+            try {
+                const bank = questionBanks.find(b => b.id === result.bankId);
+                let dims = {};
+                
+                if (bank && bank.dimensionSetId) {
+                    dims = getDimensionsBySetId(bank.dimensionSetId);
+                } else {
+                    dims = getDimensionsBySetId(1);
+                }
+                
+                // 创建工作簿
+                const wb = XLSX.utils.book_new();
+                
+                // 创建数据行
+                const data = [
+                    ["人才评测报告 - XLSX格式"],
+                    ["测试者:", result.userName || "匿名用户"],
+                    ["测试题库:", result.bankName || "未知题库"],
+                    ["测试时间:", result.timestamp],
+                    [], // 空行
+                    ["维度得分排名（答题数量）"],
+                    ["排名", "维度名称", "答题数量"]
+                ];
+                
+                // 计算每个维度的答题数量
+                const ranking = [];
+                for (const dimKey in dims) {
+                    if (result.dimensions[dimKey] !== undefined) {
+                        ranking.push({
+                            key: dimKey,
+                            name: dims[dimKey].name,
+                            count: result.dimensions[dimKey] || 0
+                        });
+                    }
+                }
+                
+                // 按答题数量从高到低排序
+                ranking.sort((a, b) => b.count - a.count);
+                
+                // 添加排名数据
+                ranking.forEach((item, index) => {
+                    data.push([index + 1, item.name, item.count]);
+                });
+                
+                // 添加总计行
+                const totalQuestions = Object.values(result.dimensions).reduce((sum, count) => sum + count, 0);
+                data.push([], ["总计", "", totalQuestions]);
+                
+                // 将数据转换为工作表
+                const ws = XLSX.utils.aoa_to_sheet(data);
+                
+                // 设置列宽
+                const colWidths = [
+                    { wch: 8 },  // 排名列宽
+                    { wch: 20 }, // 维度名称列宽
+                    { wch: 12 }  // 答题数量列宽
+                ];
+                ws['!cols'] = colWidths;
+                
+                // 将工作表添加到工作簿
+                XLSX.utils.book_append_sheet(wb, ws, "评测报告");
+                
+                // 生成文件名并下载
+                const fileName = `人才评测报告_${result.userName || "匿名"}_${new Date().toISOString().split('T')[0]}.xlsx`;
+                XLSX.writeFile(wb, fileName);
+                
+            } catch (error) {
+                console.error("XLSX导出失败:", error);
+                alert("XLSX导出失败，请重试！");
+            } finally {
+                // 恢复按钮状态
+                exportBtn.textContent = originalText;
+                exportBtn.disabled = false;
+            }
+        }
+        
+        // 导出Excel模板（题库导入模板）
+        function exportExcelTemplate() {
+            // 获取默认维度套账（维度1）的维度
+            const dims = getDimensionsBySetId(1);
+            const dimensionNames = Object.values(dims).map(d => d.name);
+            
+            // 创建工作簿
+            const wb = XLSX.utils.book_new();
+            
+            // 创建数据
+            const data = [
+                ["题库导入模板 - 请勿修改表头"],
+                ["说明：请按照以下格式填写，选项A和选项B的维度请从下拉列表中选择，允许为空"],
+                [],
+                ["题库名称", "题库描述", "维度套账ID"],
+                ["示例题库", "这是一个示例题库", "1"],
+                [],
+                ["问题", "选项A内容", "选项A维度", "选项B内容", "选项B维度"],
+                ["示例问题1", "选项A的内容", dimensionNames[0] || "领导力", "选项B的内容", dimensionNames[1] || "团队协作"],
+                ["示例问题2", "选项A的内容", "", "选项B的内容", ""] // 示例空维度
+            ];
+            
+            // 将数据转换为工作表
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            
+            // 设置列宽
+            const colWidths = [
+                { wch: 40 }, // 问题列宽
+                { wch: 25 }, // 选项A内容列宽
+                { wch: 20 }, // 选项A维度列宽
+                { wch: 25 }, // 选项B内容列宽
+                { wch: 20 }  // 选项B维度列宽
+            ];
+            ws['!cols'] = colWidths;
+            
+            // 添加下拉列表验证（选项A维度和选项B维度列）
+            const dimensionList = dimensionNames.join(",");
+            
+            // 选项A维度下拉（从第7行开始，C列）
+            const optionADataValidation = {
+                type: "list",
+                formula1: `"${dimensionList}"`,
+                allowBlank: true,
+                showDropDown: true
+            };
+            
+            // 选项B维度下拉（从第7行开始，E列）
+            const optionBDataValidation = {
+                type: "list",
+                formula1: `"${dimensionList}"`,
+                allowBlank: true,
+                showDropDown: true
+            };
+            
+            // 设置数据验证范围（从第7行到第100行）
+            for (let i = 6; i < 100; i++) {
+                // 选项A维度列（C列）
+                const cellA = XLSX.utils.encode_cell({ r: i, c: 2 });
+                if (!ws[cellA]) ws[cellA] = { t: 's', v: '' };
+                ws[cellA].dataValidation = optionADataValidation;
+                
+                // 选项B维度列（E列）
+                const cellB = XLSX.utils.encode_cell({ r: i, c: 4 });
+                if (!ws[cellB]) ws[cellB] = { t: 's', v: '' };
+                ws[cellB].dataValidation = optionBDataValidation;
+            }
+            
+            // 将工作表添加到工作簿
+            XLSX.utils.book_append_sheet(wb, ws, "题库模板");
+            
+            // 生成Excel文件并下载
+            const fileName = `人才评测题库导入模板_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+            
+            alert("题库导入模板已导出！请使用此模板编辑题库，然后导入系统。");
+        }
+        
+        // 导出维度套账模板
+        function exportDimensionSetTemplate() {
+            // 创建工作簿
+            const wb = XLSX.utils.book_new();
+            
+            // 创建数据
+            const data = [
+                ["维度套账导入模板 - 请勿修改表头"],
+                ["说明：请按照以下格式填写，每个维度套账包含多个维度"],
+                [],
+                ["套账名称", "维度名称", "颜色(十六进制)"],
+                ["示例套账", "领导力", "#FF6B6B"],
+                ["示例套账", "团队协作", "#4ECDC4"],
+                ["示例套账", "创造力", "#FFD166"],
+                ["", "", ""],
+                ["注意：", "", ""],
+                ["1. 同一个套账的所有维度放在一起", "", ""],
+                ["2. 颜色使用十六进制格式，如#FF6B6B", "", ""],
+                ["3. 每个维度套账至少需要2个维度", "", ""]
+            ];
+            
+            // 将数据转换为工作表
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            
+            // 设置列宽
+            const colWidths = [
+                { wch: 20 }, // 套账名称列宽
+                { wch: 20 }, // 维度名称列宽
+                { wch: 15 }  // 颜色列宽
+            ];
+            ws['!cols'] = colWidths;
+            
+            // 将工作表添加到工作簿
+            XLSX.utils.book_append_sheet(wb, ws, "维度套账模板");
+            
+            // 生成Excel文件并下载
+            const fileName = `维度套账导入模板_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+            
+            alert("维度套账模板已导出！请使用此模板编辑维度套账，然后导入系统。");
+        }
+        
+        // 处理文件选择（题库）
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // 检查文件类型
+            if (!file.name.match(/\.(xlsx|xls)$/i)) {
+                alert("请选择Excel文件（.xlsx或.xls格式）！");
+                return;
+            }
+            
+            selectedFile = file;
+            
+            // 显示文件信息
+            document.getElementById("selected-file-name").textContent = file.name;
+            document.getElementById("file-info").style.display = "block";
+            document.getElementById("confirm-import-bank").disabled = false;
+        }
+        
+        // 处理维度套账文件选择
+        function handleDimensionFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // 检查文件类型
+            if (!file.name.match(/\.(xlsx|xls)$/i)) {
+                alert("请选择Excel文件（.xlsx或.xls格式）！");
+                return;
+            }
+            
+            selectedDimensionFile = file;
+            
+            // 显示文件信息
+            document.getElementById("selected-dimension-file-name").textContent = file.name;
+            document.getElementById("dimension-file-info").style.display = "block";
+            document.getElementById("confirm-import-dimension-set").disabled = false;
+        }
+        
+        // 处理备份文件选择
+        function handleBackupFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // 检查文件类型
+            if (!file.name.match(/\.json$/i)) {
+                alert("请选择JSON格式的备份文件！");
+                return;
+            }
+            
+            selectedBackupFile = file;
+            
+            // 显示文件信息
+            document.getElementById("selected-backup-file-name").textContent = file.name;
+            document.getElementById("backup-file-info").style.display = "block";
+            document.getElementById("confirm-restore-backup").disabled = false;
+        }
+        
+        // 导入Excel文件（题库）
+        function importExcelFile() {
+            if (!selectedFile) {
+                alert("请先选择Excel文件！");
+                return;
+            }
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    
+                    // 获取第一个工作表
+                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    
+                    // 解析数据
+                    let bankName = "";
+                    let bankDesc = "";
+                    let dimensionSetId = 1; // 默认维度套账ID
+                    const questions = [];
+                    
+                    // 查找题库名称和描述
+                    for (let i = 0; i < jsonData.length; i++) {
+                        const row = jsonData[i];
+                        if (row[0] === "题库名称" && jsonData[i+1] && jsonData[i+1][0]) {
+                            bankName = jsonData[i+1][0] || "";
+                            bankDesc = jsonData[i+1][1] || "";
+                            dimensionSetId = jsonData[i+1][2] || 1;
+                            break;
+                        }
+                    }
+                    
+                    // 查找问题数据（从"问题"表头开始）
+                    let startRow = -1;
+                    for (let i = 0; i < jsonData.length; i++) {
+                        const row = jsonData[i];
+                        if (row[0] === "问题" && row[1] === "选项A内容") {
+                            startRow = i + 1;
+                            break;
+                        }
+                    }
+                    
+                    if (startRow === -1) {
+                        alert("Excel文件格式不正确，未找到问题数据！");
+                        return;
+                    }
+                    
+                    // 读取问题数据
+                    const dims = getDimensionsBySetId(dimensionSetId);
+                    const dimensionMap = {};
+                    for (const key in dims) {
+                        dimensionMap[dims[key].name] = key;
+                    }
+                    
+                    for (let i = startRow; i < jsonData.length; i++) {
+                        const row = jsonData[i];
+                        if (row[0] && row[0].toString().trim()) {
+                            const questionText = row[0].toString().trim();
+                            const optionAText = row[1] ? row[1].toString().trim() : "";
+                            const optionADimensionName = row[2] ? row[2].toString().trim() : "";
+                            const optionBText = row[3] ? row[3].toString().trim() : "";
+                            const optionBDimensionName = row[4] ? row[4].toString().trim() : "";
+                            
+                            if (!questionText || !optionAText || !optionBText) {
+                                continue; // 跳过不完整的问题
+                            }
+                            
+                            // 修改：允许维度为空
+                            const optionADimension = optionADimensionName ? (dimensionMap[optionADimensionName] || "") : "";
+                            const optionBDimension = optionBDimensionName ? (dimensionMap[optionBDimensionName] || "") : "";
+                            
+                            questions.push({
+                                id: questions.length + 1,
+                                text: questionText,
+                                optionA: {
+                                    text: optionAText,
+                                    dimension: optionADimension
+                                },
+                                optionB: {
+                                    text: optionBText,
+                                    dimension: optionBDimension
+                                }
+                            });
+                        }
+                    }
+                    
+                    if (questions.length === 0) {
+                        alert("Excel文件中没有找到有效的问题数据！");
+                        return;
+                    }
+                    
+                    if (!bankName) {
+                        bankName = `导入题库_${new Date().toLocaleDateString()}`;
+                    }
+                    
+                    // 创建新题库
+                    const banks = loadQuestionBanks();
+                    const newId = banks.length > 0 ? Math.max(...banks.map(b => b.id)) + 1 : 1;
+                    
+                    const newBank = {
+                        id: newId,
+                        name: bankName,
+                        description: bankDesc,
+                        dimensionSetId: parseInt(dimensionSetId) || 1,
+                        questions: questions
+                    };
+                    
+                    banks.push(newBank);
+                    saveQuestionBanks(banks);
+                    
+                    // 关闭模态框
+                    document.getElementById("import-bank-modal").classList.remove("active");
+                    
+                    // 重置文件选择
+                    selectedFile = null;
+                    document.getElementById("excel-file").value = "";
+                    document.getElementById("file-info").style.display = "none";
+                    document.getElementById("confirm-import-bank").disabled = true;
+                    
+                    // 刷新题库管理显示
+                    renderBankManagement();
+                    
+                    alert(`题库导入成功！\n题库名称：${bankName}\n题目数量：${questions.length}个`);
+                    
+                } catch (error) {
+                    console.error("导入Excel文件失败:", error);
+                    alert("导入失败，请检查Excel文件格式是否正确！");
+                }
+            };
+            
+            reader.onerror = function() {
+                alert("读取文件失败，请重试！");
+            };
+            
+            reader.readAsArrayBuffer(selectedFile);
+        }
+        
+        // 导入维度套账Excel文件
+        function importDimensionSetExcelFile() {
+            if (!selectedDimensionFile) {
+                alert("请先选择Excel文件！");
+                return;
+            }
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    
+                    // 获取第一个工作表
+                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    
+                    // 解析数据
+                    const dimensionSetsMap = {}; // 按套账名称分组
+                    
+                    // 从第4行开始读取数据（跳过表头）
+                    for (let i = 3; i < jsonData.length; i++) {
+                        const row = jsonData[i];
+                        if (row[0] && row[0].toString().trim()) {
+                            const setName = row[0].toString().trim();
+                            const dimensionName = row[1] ? row[1].toString().trim() : "";
+                            const color = row[2] ? row[2].toString().trim() : "#2575fc";
+                            
+                            if (!dimensionName) {
+                                continue; // 跳过没有维度名称的行
+                            }
+                            
+                            if (!dimensionSetsMap[setName]) {
+                                dimensionSetsMap[setName] = {
+                                    dimensions: {}
+                                };
+                            }
+                            
+                            // 生成唯一的key
+                            const key = "dim_" + Date.now() + "_" + i;
+                            dimensionSetsMap[setName].dimensions[key] = {
+                                name: dimensionName,
+                                color: color
+                            };
+                        }
+                    }
+                    
+                    if (Object.keys(dimensionSetsMap).length === 0) {
+                        alert("Excel文件中没有找到有效的维度套账数据！");
+                        return;
+                    }
+                    
+                    // 获取现有维度套账
+                    const sets = loadDimensionSets();
+                    let importCount = 0;
+                    
+                    // 导入每个维度套账
+                    for (const setName in dimensionSetsMap) {
+                        const dimensions = dimensionSetsMap[setName].dimensions;
+                        
+                        if (Object.keys(dimensions).length < 2) {
+                            alert(`维度套账"${setName}"至少需要2个维度，当前只有${Object.keys(dimensions).length}个，已跳过。`);
+                            continue;
+                        }
+                        
+                        // 检查是否已存在同名套账
+                        const existingSetIndex = sets.findIndex(s => s.name === setName);
+                        
+                        if (existingSetIndex !== -1) {
+                            if (!confirm(`维度套账"${setName}"已存在，是否覆盖？`)) {
+                                continue;
+                            }
+                            // 更新现有套账
+                            sets[existingSetIndex].dimensions = dimensions;
+                        } else {
+                            // 创建新套账
+                            const newId = sets.length > 0 ? Math.max(...sets.map(s => s.id)) + 1 : 1;
+                            const newSet = {
+                                id: newId,
+                                name: setName,
+                                dimensions: dimensions
+                            };
+                            sets.push(newSet);
+                        }
+                        
+                        importCount++;
+                    }
+                    
+                    if (importCount === 0) {
+                        alert("没有成功导入任何维度套账！");
+                        return;
+                    }
+                    
+                    // 保存维度套账
+                    saveDimensionSets(sets);
+                    
+                    // 关闭模态框
+                    document.getElementById("import-dimension-set-modal").classList.remove("active");
+                    
+                    // 重置文件选择
+                    selectedDimensionFile = null;
+                    document.getElementById("dimension-excel-file").value = "";
+                    document.getElementById("dimension-file-info").style.display = "none";
+                    document.getElementById("confirm-import-dimension-set").disabled = true;
+                    
+                    // 刷新维度套账列表
+                    renderDimensionSets();
+                    
+                    // 更新维度套账下拉框
+                    updateDimensionSetSelects();
+                    
+                    alert(`成功导入 ${importCount} 个维度套账！`);
+                    
+                } catch (error) {
+                    console.error("导入维度套账Excel文件失败:", error);
+                    alert("导入失败，请检查Excel文件格式是否正确！");
+                }
+            };
+            
+            reader.onerror = function() {
+                alert("读取文件失败，请重试！");
+            };
+            
+            reader.readAsArrayBuffer(selectedDimensionFile);
+        }
+        
+        // 新增题库
+        function addNewBank() {
+            const bankName = document.getElementById("new-bank-name").value.trim();
+            const bankDesc = document.getElementById("new-bank-desc").value.trim();
+            const dimensionSetId = parseInt(document.getElementById("new-bank-dimension-set").value);
+            
+            if (!bankName) {
+                alert("请输入题库名称！");
+                return;
+            }
+            
+            const banks = loadQuestionBanks();
+            const newId = banks.length > 0 ? Math.max(...banks.map(b => b.id)) + 1 : 1;
+            
+            const newBank = {
+                id: newId,
+                name: bankName,
+                description: bankDesc,
+                dimensionSetId: dimensionSetId || 1,
+                questions: []
+            };
+            
+            banks.push(newBank);
+            saveQuestionBanks(banks);
+            
+            // 清空表单并关闭模态框
+            document.getElementById("new-bank-name").value = "";
+            document.getElementById("new-bank-desc").value = "";
+            document.getElementById("add-bank-modal").classList.remove("active");
+            
+            // 刷新题库管理显示
+            renderBankManagement();
+            
+            alert("题库创建成功！");
+        }
+        
+        // 管理员登录
+        function adminLogin() {
+            const password = document.getElementById("admin-password").value;
+            
+            if (password === adminPassword) {
+                isAdminLoggedIn = true;
+                document.getElementById("login-section").style.display = "none";
+                document.getElementById("admin-section").style.display = "block";
+                
+                // 更新头部按钮
+                updateHeaderButton();
+                
+                // 加载管理界面数据
+                renderBankManagement();
+                renderDimensionSets();
+                renderResults();
+                loadHomeTextSettings();
+                
+                // 设置密码框为空
+                document.getElementById("admin-password").value = "";
+            } else {
+                alert("密码错误！初始密码为8888");
+            }
+        }
+        
+        // 修改密码
+        function changePassword() {
+            const current = document.getElementById("current-password").value;
+            const newPass = document.getElementById("new-password").value;
+            const confirmPass = document.getElementById("confirm-password").value;
+            
+            if (current !== adminPassword) {
+                alert("当前密码错误！");
+                return;
+            }
+            
+            if (newPass !== confirmPass) {
+                alert("新密码与确认密码不一致！");
+                return;
+            }
+            
+            if (newPass.length < 4) {
+                alert("新密码至少需要4位字符！");
+                return;
+            }
+            
+            adminPassword = newPass;
+            alert("密码修改成功！");
+            
+            // 清空表单
+            document.getElementById("current-password").value = "";
+            document.getElementById("new-password").value = "";
+            document.getElementById("confirm-password").value = "";
+        }
+        
+        // 导出所有数据
+        function exportAllData() {
+            const banks = loadQuestionBanks();
+            const results = loadResults();
+            const dimSets = loadDimensionSets();
+            const homeText = JSON.parse(localStorage.getItem("talentHomeText")) || {};
+            
+            const data = {
+                questionBanks: banks,
+                testResults: results,
+                dimensionSets: dimSets,
+                homeText: homeText,
+                adminPassword: adminPassword,
+                exportTime: new Date().toLocaleString()
+            };
+            
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = `人才评测系统数据备份_${new Date().toISOString().split('T')[0]}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+        
+        // 备份数据到文件系统
+        function backupDataToFile() {
+            const banks = loadQuestionBanks();
+            const results = loadResults();
+            const dimSets = loadDimensionSets();
+            const homeText = JSON.parse(localStorage.getItem("talentHomeText")) || {};
+            
+            const data = {
+                questionBanks: banks,
+                testResults: results,
+                dimensionSets: dimSets,
+                homeText: homeText,
+                adminPassword: adminPassword,
+                exportTime: new Date().toLocaleString(),
+                backupType: "talent-evaluation-system-backup"
+            };
+            
+            const dataStr = JSON.stringify(data, null, 2);
+            
+            // 尝试使用File System Access API保存到指定目录
+            if ('showSaveFilePicker' in window) {
+                try {
+                    // 使用现代文件系统API
+                    const opts = {
+                        suggestedName: `人才评测系统备份_${new Date().toISOString().split('T')[0]}.json`,
+                        types: [{
+                            description: 'JSON文件',
+                            accept: {'application/json': ['.json']},
+                        }],
+                    };
+                    
+                    // 显示文件保存对话框
+                    window.showSaveFilePicker(opts)
+                        .then(async (fileHandle) => {
+                            const writable = await fileHandle.createWritable();
+                            await writable.write(dataStr);
+                            await writable.close();
+                            alert("数据备份成功！");
+                        })
+                        .catch(err => {
+                            console.error("文件保存失败:", err);
+                            // 如果文件系统API失败，使用传统方法
+                            downloadBackupFile(dataStr);
+                        });
+                } catch (err) {
+                    console.error("文件系统API不可用:", err);
+                    downloadBackupFile(dataStr);
+                }
+            } else {
+                // 传统方法：下载文件
+                downloadBackupFile(dataStr);
+            }
+        }
+        
+        // 下载备份文件（传统方法）
+        function downloadBackupFile(dataStr) {
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            const exportFileDefaultName = `人才评测系统备份_${new Date().toISOString().split('T')[0]}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            alert("数据备份成功！文件已开始下载。\n\n请将下载的备份文件保存到系统的'备份'文件夹中。");
+        }
+        
+        // 恢复数据
+        function restoreData() {
+            // 显示文件上传区域
+            document.getElementById("backup-file-upload-area").style.display = "block";
+            document.getElementById("backup-buttons").style.display = "flex";
+        }
+        
+        // 取消恢复数据
+        function cancelRestoreBackup() {
+            document.getElementById("backup-file-upload-area").style.display = "none";
+            document.getElementById("backup-buttons").style.display = "none";
+            document.getElementById("backup-file-info").style.display = "none";
+            document.getElementById("backup-file").value = "";
+            selectedBackupFile = null;
+            document.getElementById("confirm-restore-backup").disabled = true;
+        }
+        
+        // 确认恢复数据
+        function confirmRestoreBackup() {
+            if (!selectedBackupFile) {
+                alert("请先选择备份文件！");
+                return;
+            }
+            
+            if (!confirm("警告：恢复数据将覆盖当前所有题库、维度套账和测试结果！\n\n确定要继续吗？")) {
+                return;
+            }
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const dataStr = e.target.result;
+                    const backupData = JSON.parse(dataStr);
+                    
+                    // 验证备份文件格式
+                    if (!backupData.backupType || backupData.backupType !== "talent-evaluation-system-backup") {
+                        alert("备份文件格式不正确，无法恢复！");
+                        return;
+                    }
+                    
+                    // 恢复数据
+                    if (backupData.questionBanks) {
+                        saveQuestionBanks(backupData.questionBanks);
+                    }
+                    
+                    if (backupData.testResults) {
+                        saveResults(backupData.testResults);
+                    }
+                    
+                    if (backupData.dimensionSets) {
+                        saveDimensionSets(backupData.dimensionSets);
+                    }
+                    
+                    if (backupData.homeText) {
+                        localStorage.setItem("talentHomeText", JSON.stringify(backupData.homeText));
+                    }
+                    
+                    if (backupData.adminPassword) {
+                        adminPassword = backupData.adminPassword;
+                    }
+                    
+                    // 重置UI
+                    cancelRestoreBackup();
+                    
+                    // 刷新管理界面
+                    renderBankManagement();
+                    renderDimensionSets();
+                    renderResults();
+                    loadHomeTextSettings();
+                    updateDimensionSetSelects();
+                    
+                    alert("数据恢复成功！");
+                    
+                } catch (error) {
+                    console.error("恢复备份文件失败:", error);
+                    alert("恢复失败，请检查备份文件格式是否正确！");
+                }
+            };
+            
+            reader.onerror = function() {
+                alert("读取备份文件失败，请重试！");
+            };
+            
+            reader.readAsText(selectedBackupFile);
+        }
+        
+        // 清空所有数据
+        function clearAllData() {
+            if (!confirm("确定要清空所有数据吗？此操作将删除所有题库、测试结果和维度套账，不可恢复！")) return;
+            
+            localStorage.removeItem("talentQuestionBanks");
+            localStorage.removeItem("talentResults");
+            localStorage.removeItem("talentDimensionSets");
+            localStorage.removeItem("talentHomeText");
+            
+            // 重新初始化默认数据
+            initDefaultDimensionSets();
+            initSampleQuestionBanks();
+            
+            // 重新加载数据
+            loadDimensionSets();
+            loadQuestionBanks();
+            loadResults();
+            
+            // 更新界面
+            renderBankManagement();
+            renderDimensionSets();
+            renderResults();
+            updateDimensionSetSelects();
+            
+            alert("所有数据已清空，已恢复为初始数据。");
+        }
+        
+        // 设置后台管理选项卡
+        function setupAdminTabs() {
+            document.querySelectorAll("[data-admin-tab]").forEach(tab => {
+                tab.addEventListener("click", function() {
+                    const tabId = this.getAttribute("data-admin-tab");
+                    
+                    // 更新选项卡状态
+                    document.querySelectorAll("[data-admin-tab]").forEach(t => t.classList.remove("active"));
+                    this.classList.add("active");
+                    
+                    // 显示对应内容
+                    document.querySelectorAll("#admin-section .tab-content").forEach(content => {
+                        content.classList.remove("active");
+                    });
+                    document.getElementById(tabId).classList.add("active");
+                    
+                    // 如果是设置页面，加载首页文字设置
+                    if (tabId === "settings") {
+                        loadHomeTextSettings();
+                    }
+                });
+            });
+        }
+        
+        // 初始化
+        function init() {
+            // 初始化默认数据
+            initDefaultDimensionSets();
+            initSampleQuestionBanks();
+            
+            // 加载数据
+            loadDimensionSets();
+            loadQuestionBanks();
+            loadResults();
+            loadHomeTextSettings();
+            
+            // 设置事件监听器
+            // 开始测试按钮
+            document.getElementById("start-test-btn").addEventListener("click", function() {
+                // 修改：每次显示模态框时清空输入框
+                document.getElementById("user-name").value = "";
+                document.getElementById("name-modal").classList.add("active");
+            });
+            
+            // 头部按钮（初始为管理员登录）
+            document.getElementById("header-action-btn").addEventListener("click", showAdminPage);
+            
+            // 姓名确认
+            document.getElementById("confirm-name").addEventListener("click", function() {
+                const userName = document.getElementById("user-name").value.trim();
+                if (!userName) {
+                    alert("请输入您的姓名！");
+                    return;
+                }
+                
+                currentUser = userName;
+                document.getElementById("name-modal").classList.remove("active");
+                showBankSelectionPage();
+            });
+            
+            // 取消测试
+            document.getElementById("cancel-test").addEventListener("click", function() {
+                document.getElementById("name-modal").classList.remove("active");
+            });
+            
+            // 题库选择页面
+            document.getElementById("back-to-home-from-bank").addEventListener("click", showHomePage);
+            document.getElementById("start-selected-test").addEventListener("click", showTestPage);
+            
+            // 测试控制按钮
+            document.getElementById("prev-question").addEventListener("click", prevQuestion);
+            document.getElementById("next-question").addEventListener("click", nextQuestion);
+            document.getElementById("submit-test").addEventListener("click", submitTest);
+            
+            // 继续测试其他题库（从完成模态框）
+            document.getElementById("continue-test-btn").addEventListener("click", function() {
+                document.getElementById("complete-modal").classList.remove("active");
+                // 重置当前测试状态，保留用户信息
+                currentQuestionIndex = 0;
+                testAnswers = [];
+                selectedBankId = null;
+                // 显示题库选择页面
+                showBankSelectionPage();
+            });
+            
+            // 返回首页（从完成模态框）
+            document.getElementById("back-to-home").addEventListener("click", function() {
+                document.getElementById("complete-modal").classList.remove("active");
+                showHomePage();
+            });
+            
+            // 后台管理功能
+            document.getElementById("login-btn").addEventListener("click", adminLogin);
+            document.getElementById("add-bank-btn").addEventListener("click", function() {
+                // 更新维度套账下拉框
+                updateDimensionSetSelects();
+                document.getElementById("add-bank-modal").classList.add("active");
+            });
+            document.getElementById("cancel-add-bank").addEventListener("click", function() {
+                document.getElementById("add-bank-modal").classList.remove("active");
+            });
+            document.getElementById("confirm-add-bank").addEventListener("click", addNewBank);
+            document.getElementById("import-bank-btn").addEventListener("click", function() {
+                document.getElementById("import-bank-modal").classList.add("active");
+            });
+            document.getElementById("cancel-import-bank").addEventListener("click", function() {
+                document.getElementById("import-bank-modal").classList.remove("active");
+                selectedFile = null;
+                document.getElementById("excel-file").value = "";
+                document.getElementById("file-info").style.display = "none";
+                document.getElementById("confirm-import-bank").disabled = true;
+            });
+            document.getElementById("confirm-import-bank").addEventListener("click", importExcelFile);
+            document.getElementById("export-template-btn").addEventListener("click", exportExcelTemplate);
+            document.getElementById("add-dimension-set-btn").addEventListener("click", addNewDimensionSet);
+            document.getElementById("import-dimension-set-btn").addEventListener("click", function() {
+                document.getElementById("import-dimension-set-modal").classList.add("active");
+            });
+            document.getElementById("export-dimension-set-template-btn").addEventListener("click", exportDimensionSetTemplate);
+            document.getElementById("add-question-btn").addEventListener("click", addOrUpdateQuestion);
+            document.getElementById("save-bank-info-btn").addEventListener("click", saveBankInfo);
+            document.getElementById("change-password").addEventListener("click", changePassword);
+            document.getElementById("save-home-text").addEventListener("click", saveHomeTextSettings);
+            document.getElementById("result-filter").addEventListener("change", renderResults);
+            document.getElementById("export-all-data").addEventListener("click", exportAllData);
+            document.getElementById("backup-data-btn").addEventListener("click", backupDataToFile);
+            document.getElementById("restore-data-btn").addEventListener("click", restoreData);
+            document.getElementById("clear-all-data").addEventListener("click", clearAllData);
+            
+            // 备份与恢复相关
+            document.getElementById("backup-file").addEventListener("change", handleBackupFileSelect);
+            document.getElementById("backup-file-upload-area").addEventListener("click", function() {
+                document.getElementById("backup-file").click();
+            });
+            document.getElementById("cancel-restore-backup").addEventListener("click", cancelRestoreBackup);
+            document.getElementById("confirm-restore-backup").addEventListener("click", confirmRestoreBackup);
+            
+            // 返回按钮
+            document.getElementById("back-to-bank-management").addEventListener("click", showAdminPage);
+            document.getElementById("back-to-results").addEventListener("click", showAdminPage);
+            
+            // PNG导出
+            document.getElementById("export-png-btn").addEventListener("click", exportPNGReport);
+            
+            // XLSX导出
+            document.getElementById("export-xlsx-btn").addEventListener("click", exportXLSXReport);
+            
+            // 文件上传（题库）
+            document.getElementById("excel-file").addEventListener("change", handleFileSelect);
+            document.getElementById("file-upload-area").addEventListener("click", function() {
+                document.getElementById("excel-file").click();
+            });
+            
+            // 文件上传（维度套账）
+            document.getElementById("dimension-excel-file").addEventListener("change", handleDimensionFileSelect);
+            document.getElementById("dimension-file-upload-area").addEventListener("click", function() {
+                document.getElementById("dimension-excel-file").click();
+            });
+            
+            // 维度套账编辑相关
+            document.getElementById("add-dimension-to-set-btn").addEventListener("click", addDimensionToSet);
+            document.getElementById("cancel-dimension-set-edit").addEventListener("click", function() {
+                document.getElementById("dimension-set-edit-modal").classList.remove("active");
+            });
+            document.getElementById("save-dimension-set-btn").addEventListener("click", saveDimensionSet);
+            
+            // 维度套账导入相关
+            document.getElementById("cancel-import-dimension-set").addEventListener("click", function() {
+                document.getElementById("import-dimension-set-modal").classList.remove("active");
+                selectedDimensionFile = null;
+                document.getElementById("dimension-excel-file").value = "";
+                document.getElementById("dimension-file-info").style.display = "none";
+                document.getElementById("confirm-import-dimension-set").disabled = true;
+            });
+            document.getElementById("confirm-import-dimension-set").addEventListener("click", importDimensionSetExcelFile);
+            
+            // 维度套账选择变化时更新维度下拉框
+            document.getElementById("edit-bank-dimension-set").addEventListener("change", function() {
+                const dimensionSetId = parseInt(this.value);
+                updateDimensionSelects(dimensionSetId);
+            });
+            
+            // 拖拽上传（题库）
+            document.getElementById("file-upload-area").addEventListener("dragover", function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.style.borderColor = "#2575fc";
+                this.style.backgroundColor = "#f0f7ff";
+            });
+            
+            document.getElementById("file-upload-area").addEventListener("dragleave", function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.style.borderColor = "#ddd";
+                this.style.backgroundColor = "";
+            });
+            
+            document.getElementById("file-upload-area").addEventListener("drop", function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.style.borderColor = "#ddd";
+                this.style.backgroundColor = "";
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    document.getElementById("excel-file").files = files;
+                    handleFileSelect({ target: { files: files } });
+                }
+            });
+            
+            // 拖拽上传（维度套账）
+            document.getElementById("dimension-file-upload-area").addEventListener("dragover", function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.style.borderColor = "#2575fc";
+                this.style.backgroundColor = "#f0f7ff";
+            });
+            
+            document.getElementById("dimension-file-upload-area").addEventListener("dragleave", function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.style.borderColor = "#ddd";
+                this.style.backgroundColor = "";
+            });
+            
+            document.getElementById("dimension-file-upload-area").addEventListener("drop", function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.style.borderColor = "#ddd";
+                this.style.backgroundColor = "";
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    document.getElementById("dimension-excel-file").files = files;
+                    handleDimensionFileSelect({ target: { files: files } });
+                }
+            });
+            
+            // 拖拽上传（备份文件）
+            document.getElementById("backup-file-upload-area").addEventListener("dragover", function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.style.borderColor = "#2575fc";
+                this.style.backgroundColor = "#f0f7ff";
+            });
+            
+            document.getElementById("backup-file-upload-area").addEventListener("dragleave", function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.style.borderColor = "#ddd";
+                this.style.backgroundColor = "";
+            });
+            
+            document.getElementById("backup-file-upload-area").addEventListener("drop", function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.style.borderColor = "#ddd";
+                this.style.backgroundColor = "";
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    document.getElementById("backup-file").files = files;
+                    handleBackupFileSelect({ target: { files: files } });
+                }
+            });
+            
+            // 设置后台管理选项卡
+            setupAdminTabs();
+            
+            // 监听回车键
+            document.getElementById("admin-password").addEventListener("keypress", function(e) {
+                if (e.key === "Enter") {
+                    adminLogin();
+                }
+            });
+            
+            document.getElementById("user-name").addEventListener("keypress", function(e) {
+                if (e.key === "Enter") {
+                    document.getElementById("confirm-name").click();
+                }
+            });
+            
+            document.getElementById("new-bank-name").addEventListener("keypress", function(e) {
+                if (e.key === "Enter") {
+                    document.getElementById("confirm-add-bank").click();
+                }
+            });
+            
+            document.getElementById("dimension-set-name").addEventListener("keypress", function(e) {
+                if (e.key === "Enter") {
+                    saveDimensionSet();
+                }
+            });
+            
+            document.getElementById("new-dimension-name").addEventListener("keypress", function(e) {
+                if (e.key === "Enter") {
+                    addDimensionToSet();
+                }
+            });
+            
+            // 初始显示首页
+            showHomePage();
+            updateHeaderButton();
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener("DOMContentLoaded", init);
+    </script>
+</body>
+</html>
