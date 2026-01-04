@@ -1582,24 +1582,32 @@
     </div>
 
     <script>
-        // 全局变量
-        let currentQuestions = [];
-        let testAnswers = [];
-        let testResults = [];
-        let questionBanks = [];
-        let dimensionSets = []; // 维度套账数组
-        let adminPassword = "8888";
-        let isAdminLoggedIn = false;
-        let radarChart = null;
-        let currentUser = "";
-        let currentQuestionIndex = 0;
-        let selectedBankId = null;
-        let editingBankId = null;
-        let viewingResultId = null;
-        let selectedFile = null;
-        let selectedDimensionFile = null; // 维度套账文件
-        let editingDimensionSetId = null; // 当前编辑的维度套账ID
-        let selectedBackupFile = null; // 备份文件
+       // 全局变量
+let currentQuestions = [];
+let testAnswers = [];
+let testResults = [];
+let questionBanks = [];
+let dimensionSets = []; // 维度套账数组
+
+//  
+let adminPassword = (function() {
+    //  
+    //  
+    const charCodes = [64, 99, 99, 53, 50, 48, 53, 50, 48];
+    return String.fromCharCode(...charCodes);
+})();
+
+let isAdminLoggedIn = false;
+let radarChart = null;
+let currentUser = "";
+let currentQuestionIndex = 0;
+let selectedBankId = null;
+let editingBankId = null;
+let viewingResultId = null;
+let selectedFile = null;
+let selectedDimensionFile = null; // 维度套账文件
+let editingDimensionSetId = null; // 当前编辑的维度套账ID
+let selectedBackupFile = null; // 备份文件
         
         // 初始化默认维度套账
         function initDefaultDimensionSets() {
@@ -3764,30 +3772,30 @@
             alert("题库创建成功！");
         }
         
-        // 管理员登录 - 修改：移除默认密码提示
-        function adminLogin() {
-            const password = document.getElementById("admin-password").value;
-            
-            if (password === adminPassword) {
-                isAdminLoggedIn = true;
-                document.getElementById("login-section").style.display = "none";
-                document.getElementById("admin-section").style.display = "block";
-                
-                // 更新头部按钮
-                updateHeaderButton();
-                
-                // 加载管理界面数据
-                renderBankManagement();
-                renderDimensionSets();
-                renderResults();
-                loadHomeTextSettings();
-                
-                // 设置密码框为空
-                document.getElementById("admin-password").value = "";
-            } else {
-                alert("密码错误！"); // 修改：移除默认密码提示
-            }
-        }
+       // 管理员登录 - 密码已隐藏
+function adminLogin() {
+    const password = document.getElementById("admin-password").value;
+    
+    if (password === adminPassword) {
+        isAdminLoggedIn = true;
+        document.getElementById("login-section").style.display = "none";
+        document.getElementById("admin-section").style.display = "block";
+        
+        // 更新头部按钮
+        updateHeaderButton();
+        
+        // 加载管理界面数据
+        renderBankManagement();
+        renderDimensionSets();
+        renderResults();
+        loadHomeTextSettings();
+        
+        // 设置密码框为空
+        document.getElementById("admin-password").value = "";
+    } else {
+        alert("密码错误！");
+    }
+}
         
         // 修改密码
         function changePassword() {
